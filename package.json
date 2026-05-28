@@ -6,7 +6,7 @@
     "build:frontend": "npm --prefix frontend install && npm --prefix frontend run build",
     "build:backend": "tsc -p tsconfig.json",
     "build": "npm run build:frontend && npm run build:backend",
-    "start": "nest start",
+    "start": "node dist/main",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main"
   },

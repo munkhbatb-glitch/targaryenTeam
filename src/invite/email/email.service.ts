@@ -12,34 +12,49 @@ export class EmailService {
     private readonly resend: ResendProvider,
   ) {}
 
+  private hasBrevoConfig(): boolean {
+    return Boolean(
+      this.config.get<string>('BREVO_API_KEY') ||
+        (this.config.get<string>('BREVO_SMTP_USER') &&
+          this.config.get<string>('BREVO_SMTP_KEY')),
+    );
+  }
+
+  private hasResendConfig(): boolean {
+    return Boolean(this.config.get<string>('RESEND_API_KEY'));
+  }
+
   getProvider(): EmailProvider {
     const configured = this.config.get<string>('EMAIL_PROVIDER', 'auto').toLowerCase();
 
     if (configured === 'brevo') {
+      if (!this.hasBrevoConfig()) {
+        throw new Error(
+          'BREVO_API_KEY эсвэл BREVO_SMTP_* тохируулаагүй. Render → Environment дээр нэмнэ үү.',
+        );
+      }
       return this.brevo;
     }
 
     if (configured === 'resend') {
+      if (!this.hasResendConfig()) {
+        throw new Error(
+          'RESEND_API_KEY тохируулаагүй. Render → Environment дээр нэмнэ үү.',
+        );
+      }
       return this.resend;
     }
 
-    if (this.config.get<string>('RESEND_API_KEY')) {
+    if (this.hasResendConfig()) {
       return this.resend;
     }
 
-    if (this.config.get<string>('BREVO_API_KEY')) {
-      return this.brevo;
-    }
-
-    if (
-      this.config.get<string>('BREVO_SMTP_USER') &&
-      this.config.get<string>('BREVO_SMTP_KEY')
-    ) {
+    if (this.hasBrevoConfig()) {
       return this.brevo;
     }
 
     throw new Error(
-      'И-мэйл provider тохируулаагүй. BREVO_SMTP_* эсвэл BREVO_API_KEY эсвэл RESEND_API_KEY .env файлд нэмнэ үү.',
+      'И-мэйл provider тохируулаагүй. Render dashboard → Environment дээр BREVO_API_KEY + EMAIL_FROM нэмнэ үү.',
     );
   }
 
