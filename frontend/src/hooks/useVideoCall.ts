@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiBase, getWebSocketUrl } from "@/lib/backend";
+import { clearIncomingCallAlert } from "@/lib/incoming-call-alert";
 
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
-const CALL_ALERT_CLEAR_EVENT_KEY = "incomingCallClearEvent";
 
 export type ChatMessage = {
   id: string;
@@ -83,10 +83,7 @@ export function useVideoCall({
   }, []);
 
   const broadcastClearIncomingCallAlert = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const clearValue = JSON.stringify({ roomId, at: Date.now() });
-    localStorage.setItem(CALL_ALERT_CLEAR_EVENT_KEY, clearValue);
-    window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key: CALL_ALERT_CLEAR_EVENT_KEY, newValue: clearValue } }));
+    clearIncomingCallAlert(roomId);
   }, [roomId]);
 
   const cleanupAll = useCallback(() => {

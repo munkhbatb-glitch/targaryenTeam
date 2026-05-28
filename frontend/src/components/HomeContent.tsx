@@ -33,20 +33,19 @@ import MentorBookingModal, {
   type MentorForBooking,
 } from "@/components/MentorBookingModal";
 import { getApiBase } from "@/lib/backend";
+import {
+  CALL_ALERT_CLEAR_EVENT_KEY,
+  CALL_ALERT_EVENT_KEY,
+  clearIncomingCallAlert,
+  parseIncomingCallAlert,
+  publishIncomingCallAlert,
+  type IncomingCallAlert,
+} from "@/lib/incoming-call-alert";
 import Lottie from "lottie-react";
 import callAnimation from "../../animation.json";
 
 const CALL_MENTOR_KEY = "activeCallMentor";
 const ROOM_KEY = "activeCallRoom";
-const CALL_ALERT_EVENT_KEY = "incomingCallEvent";
-const CALL_ALERT_CLEAR_EVENT_KEY = "incomingCallClearEvent";
-
-type IncomingCallAlert = {
-  roomId: string;
-  hostName: string;
-  hostAvatar?: string;
-  createdAt: number;
-};
 
 export default function HomeContent() {
   const router = useRouter();
@@ -221,17 +220,6 @@ export default function HomeContent() {
   ];
 
   useEffect(() => {
-    function parseIncomingCall(raw: string | null): IncomingCallAlert | null {
-      if (!raw) return null;
-      try {
-        const data = JSON.parse(raw) as IncomingCallAlert;
-        if (!data.roomId || !data.createdAt) return null;
-        return data;
-      } catch {
-        return null;
-      }
-    }
-
     const checkFreshIncomingCall = (event: IncomingCallAlert | null) => {
       if (!event) return;
       // Ignore stale events older than 2 minutes.
@@ -255,12 +243,12 @@ export default function HomeContent() {
     };
 
     checkFreshIncomingCall(
-      parseIncomingCall(localStorage.getItem(CALL_ALERT_EVENT_KEY)),
+      parseIncomingCallAlert(localStorage.getItem(CALL_ALERT_EVENT_KEY)),
     );
 
     const onStorage = (ev: StorageEvent) => {
       if (ev.key === CALL_ALERT_EVENT_KEY) {
-        checkFreshIncomingCall(parseIncomingCall(ev.newValue));
+        checkFreshIncomingCall(parseIncomingCallAlert(ev.newValue));
       }
       if (ev.key === CALL_ALERT_CLEAR_EVENT_KEY) {
         setIncomingCall(null);
@@ -269,7 +257,7 @@ export default function HomeContent() {
 
     const onCustomStorage = (ev: CustomEvent) => {
       if (ev.detail.key === CALL_ALERT_EVENT_KEY) {
-        checkFreshIncomingCall(parseIncomingCall(ev.detail.newValue));
+        checkFreshIncomingCall(parseIncomingCallAlert(ev.detail.newValue));
       }
       if (ev.detail.key === CALL_ALERT_CLEAR_EVENT_KEY) {
         setIncomingCall(null);
@@ -281,7 +269,9 @@ export default function HomeContent() {
     
     // Fallback polling for same-browser situations where storage events might be missed
     const pollInterval = setInterval(() => {
-      checkFreshIncomingCall(parseIncomingCall(localStorage.getItem(CALL_ALERT_EVENT_KEY)));
+      checkFreshIncomingCall(
+        parseIncomingCallAlert(localStorage.getItem(CALL_ALERT_EVENT_KEY)),
+      );
     }, 2000);
 
     return () => {
@@ -293,10 +283,8 @@ export default function HomeContent() {
 
   function joinIncomingCall() {
     if (!incomingCall) return;
-    const clearValue = JSON.stringify({ roomId: incomingCall.roomId, at: Date.now() });
-    localStorage.setItem(CALL_ALERT_CLEAR_EVENT_KEY, clearValue);
-    window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key: CALL_ALERT_CLEAR_EVENT_KEY, newValue: clearValue } }));
-    
+    clearIncomingCallAlert(incomingCall.roomId);
+
     sessionStorage.setItem(ROOM_KEY, incomingCall.roomId);
     router.push(`/call/?room=${encodeURIComponent(incomingCall.roomId)}`);
     setIncomingCall(null);
@@ -335,9 +323,7 @@ export default function HomeContent() {
             <button
               type="button"
               onClick={() => {
-                const clearValue = JSON.stringify({ roomId: incomingCall.roomId, at: Date.now() });
-                localStorage.setItem(CALL_ALERT_CLEAR_EVENT_KEY, clearValue);
-                window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key: CALL_ALERT_CLEAR_EVENT_KEY, newValue: clearValue } }));
+                clearIncomingCallAlert(incomingCall.roomId);
                 setIncomingCall(null);
               }}
               className="mt-3 w-full rounded-2xl py-3 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
@@ -355,17 +341,11 @@ export default function HomeContent() {
           const roomId = `call-${Date.now()}`;
           sessionStorage.setItem(CALL_MENTOR_KEY, JSON.stringify(m));
           sessionStorage.setItem(ROOM_KEY, roomId);
-          const alertValue = JSON.stringify({
-              roomId,
-              hostName: m.name || "Хэрэглэгч",
-              hostAvatar: m.avatarUrl || undefined,
-              createdAt: Date.now(),
-            } satisfies IncomingCallAlert);
-            
-          // Remove any stale clear-event so it doesn't suppress this new notification
-          localStorage.removeItem("incomingCallClearEvent");
-          localStorage.setItem(CALL_ALERT_EVENT_KEY, alertValue);
-          // Do not dispatch CustomEvent here so the caller doesn't see the notification
+          publishIncomingCallAlert({
+            roomId,
+            hostName: m.name || "Хэрэглэгч",
+            hostAvatar: m.avatarUrl || undefined,
+          });
           if (m.email?.trim()) {
             fetch(`${getApiBase()}/api/invite`, {
               method: "POST",
@@ -377,7 +357,6 @@ export default function HomeContent() {
               }),
             }).catch(() => {});
           }
-          router.push(`/call/?room=${encodeURIComponent(roomId)}`);
         }}
       />
       <div className="sticky top-0 z-30 border-b border-black/5 bg-[#fbfaf8]/80 backdrop-blur">

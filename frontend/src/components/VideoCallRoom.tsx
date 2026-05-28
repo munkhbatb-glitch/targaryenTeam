@@ -23,6 +23,7 @@ import { useLocalMedia } from "@/hooks/useLocalMedia";
 import { useVideoCall } from "@/hooks/useVideoCall";
 import { getMentorDisplayName } from "@/lib/mentor-display";
 import { getApiBase, getInviteUrl } from "@/lib/backend";
+import { publishIncomingCallAlert } from "@/lib/incoming-call-alert";
 
 type Props = {
   mentor: MentorForBooking;
@@ -120,6 +121,11 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
   function endCall() {
     cleanup();
     stopStream();
+    publishIncomingCallAlert({
+      roomId,
+      hostName: displayName,
+      hostAvatar: mentor.avatarUrl,
+    });
     router.push("/");
   }
 
