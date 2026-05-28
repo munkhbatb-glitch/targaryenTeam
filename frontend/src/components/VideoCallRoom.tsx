@@ -101,9 +101,11 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
 
   useEffect(() => {
     fetch(`${getApiBase()}/api/invite/status`)
-      .then((r) => r.json())
-      .then((data: { configured?: boolean }) => setEmailConfigured(Boolean(data.configured)))
-      .catch(() => setEmailConfigured(false));
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("status failed"))))
+      .then((data: { configured?: boolean }) =>
+        setEmailConfigured(Boolean(data.configured)),
+      )
+      .catch(() => setEmailConfigured(null));
   }, []);
 
   function sendMessage() {
@@ -271,13 +273,12 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
                   }}
                   placeholder="И-мэйлээр урих"
                   type="email"
-                  disabled={emailConfigured === false}
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 disabled:opacity-50"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
                 />
                 <button
                   type="button"
                   onClick={() => void handleInvite()}
-                  disabled={!inviteEmail.trim() || emailConfigured === false}
+                  disabled={!inviteEmail.trim()}
                   className="shrink-0 rounded-lg bg-[#ff4d2d] px-2.5 py-1 text-xs font-medium text-white disabled:opacity-40"
                 >
                   Урих
@@ -285,7 +286,8 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
               </div>
               {emailConfigured === false && (
                 <p className="px-1 text-xs text-amber-700">
-                  И-мэйл идэвхгүй. Room link хуваалц:{" "}
+                  И-мэйл тохиргоо дутуу байж магадгүй. Render → Environment шалгана уу.
+                  Эсвэл{" "}
                   <button
                     type="button"
                     className="underline"
