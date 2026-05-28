@@ -14,11 +14,20 @@ type SignalMessage = {
   sender?: string;
   at?: number;
   messages?: ChatMessage[];
+  // call-notify fields
+  calleeEmail?: string;
+  hostName?: string;
+  hostAvatar?: string;
+  createdAt?: number;
+  // lobby-register field
+  email?: string;
 };
 
 @Injectable()
 export class SignalingService {
   private readonly rooms = new Map<string, Set<WebSocket>>();
+  // Maps user email -> WebSocket for lobby (online but not in a call)
+  private readonly lobby = new Map<string, WebSocket>();
 
   constructor(private readonly chatService: ChatService) {}
 
@@ -105,6 +114,30 @@ export class SignalingService {
         }
         break;
 
+      // Register current user in the lobby so they can receive call notifications
+      case 'lobby-register':
+        if (data.email) {
+          this.lobby.set(data.email.toLowerCase(), client);
+        }
+        break;
+
+      // Caller sends this — broadcast incoming-call to all lobby users except the sender
+      case 'call-notify': {
+        const payload = JSON.stringify({
+          type: 'incoming-call',
+          roomId: data.roomId,
+          hostName: data.hostName,
+          hostAvatar: data.hostAvatar,
+          createdAt: data.createdAt ?? Date.now(),
+        });
+        for (const ws of this.lobby.values()) {
+          if (ws !== client && ws.readyState === WebSocket.OPEN) {
+            ws.send(payload);
+          }
+        }
+        break;
+      }
+
       case 'offer':
       case 'answer':
       case 'ice-candidate':
@@ -146,6 +179,13 @@ export class SignalingService {
   disconnect(roomId: string | null, client: WebSocket) {
     if (roomId) {
       this.leave(roomId, client);
+    }
+    // Remove from lobby if this client was registered
+    for (const [email, ws] of this.lobby.entries()) {
+      if (ws === client) {
+        this.lobby.delete(email);
+        break;
+      }
     }
   }
 }

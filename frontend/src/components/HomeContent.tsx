@@ -87,6 +87,18 @@ export default function HomeContent() {
 
   const mentors: MentorForBooking[] = [
     {
+      name: "Г.Аюурзана",
+      title: "МУСГЗ, Зохиолч",
+      avatarUrl: "/Ayur.png",
+      price: "₮400,000",
+      pricePerSession: 70000,
+      rating: 4.8,
+      reviews: 52,
+      meetings: 198,
+      years: 15,
+      tags: ["Мэдрэмжээ илэрхийлэх", "Тэмдэглэл хөтлөх"],
+    },
+    {
       name: "Ч.Анар",
       title: "УИХ-н гишүүн, And Global Founder",
       avatarUrl: "/Anar.png",
@@ -133,18 +145,6 @@ export default function HomeContent() {
       meetings: 400,
       years: 15,
       tags: ["Архитект", "GOOGLE-н туршлага", "Cross-Functional баг бүрдүүлэх"],
-    },
-    {
-      name: "Г.Аюурзана",
-      title: "МУСГЗ, Зохиолч",
-      avatarUrl: "/Ayur.png",
-      price: "₮400,000",
-      pricePerSession: 70000,
-      rating: 4.8,
-      reviews: 52,
-      meetings: 198,
-      years: 15,
-      tags: ["Мэдрэмжээ илэрхийлэх", "Тэмдэглэл хөтлөх"],
     },
     {
       name: "У. Гүндсамбуу",
