@@ -23,7 +23,7 @@ import { useLocalMedia } from "@/hooks/useLocalMedia";
 import { useVideoCall } from "@/hooks/useVideoCall";
 import { getMentorDisplayName } from "@/lib/mentor-display";
 import { getApiBase, getInviteUrl } from "@/lib/backend";
-import { publishIncomingCallAlert } from "@/lib/incoming-call-alert";
+import { clearIncomingCallAlert } from "@/lib/incoming-call-alert";
 
 type Props = {
   mentor: MentorForBooking;
@@ -86,6 +86,13 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
     [attachToVideo],
   );
 
+  const bindLocalVideoPreview = useCallback(
+    (el: HTMLVideoElement | null) => {
+      attachToVideo(el);
+    },
+    [attachToVideo],
+  );
+
   const bindRemoteVideo = useCallback(
     (el: HTMLVideoElement | null) => {
       remoteVideoRef.current = el;
@@ -96,7 +103,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
 
   useEffect(() => {
     attachToVideo(localVideoRef.current);
-  }, [ready, attachToVideo]);
+  }, [ready, cameraOn, screenSharing, attachToVideo]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -121,11 +128,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
   function endCall() {
     cleanup();
     stopStream();
-    publishIncomingCallAlert({
-      roomId,
-      hostName: displayName,
-      hostAvatar: mentor.avatarUrl,
-    });
+    clearIncomingCallAlert(roomId);
     router.push("/");
   }
 
@@ -161,23 +164,29 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
     <div className="video-call-root relative flex h-dvh flex-col overflow-hidden bg-[#eceae6] p-3 sm:min-h-[600px] sm:p-4">
       <div className="flex min-h-0 flex-1 flex-col gap-3 sm:flex-row sm:gap-4">
         <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl bg-slate-900 shadow-sm ring-1 ring-black/5">
-          {connected ? (
+          <video
+            ref={bindRemoteVideo}
+            autoPlay
+            playsInline
+            muted={false}
+            className={`size-full object-cover ${connected ? "opacity-100" : "pointer-events-none absolute inset-0 opacity-0"}`}
+          />
+          {!connected && ready && (cameraOn || screenSharing) && (
             <video
-              ref={bindRemoteVideo}
+              ref={bindLocalVideoPreview}
               autoPlay
               playsInline
-              muted={false}
+              muted
               className="size-full object-cover"
             />
-          ) : (
-            <>
-              <div className="absolute inset-0 bg-[#f0a8c8]/25" />
-              {waiting && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/35 text-sm font-medium text-white">
-                  Холбогдохыг хүлээж байна...
-                </div>
-              )}
-            </>
+          )}
+          {!connected && !(cameraOn || screenSharing) && (
+            <div className="absolute inset-0 bg-[#f0a8c8]/25" />
+          )}
+          {!connected && waiting && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/35 text-sm font-medium text-white">
+              Холбогдохыг хүлээж байна...
+            </div>
           )}
 
           <div className="absolute bottom-4 left-4 rounded-full bg-black/45 px-3.5 py-1.5 text-sm font-medium text-white backdrop-blur-sm">
@@ -297,7 +306,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
           </div>
 
           <div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl bg-slate-900 shadow-sm ring-1 ring-black/10">
-            {cameraOn || screenSharing ? (
+            {ready && (cameraOn || screenSharing) ? (
               <video
                 ref={bindLocalVideo}
                 autoPlay

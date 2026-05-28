@@ -22,6 +22,7 @@ export function useLocalMedia({ autoStart = true }: UseLocalMediaOptions = {}) {
   const attachToVideo = useCallback((el: HTMLVideoElement | null) => {
     if (el && streamRef.current) {
       el.srcObject = streamRef.current;
+      void el.play().catch(() => {});
     }
   }, []);
 

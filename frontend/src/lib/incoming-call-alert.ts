@@ -35,6 +35,23 @@ export function clearIncomingCallAlert(
 ) {
   if (typeof window === "undefined") return;
 
+  const rawEvent = localStorage.getItem(CALL_ALERT_EVENT_KEY);
+  if (rawEvent) {
+    try {
+      const event = JSON.parse(rawEvent) as IncomingCallAlert;
+      if (event.roomId === roomId) {
+        localStorage.removeItem(CALL_ALERT_EVENT_KEY);
+        window.dispatchEvent(
+          new CustomEvent("local-storage-sync", {
+            detail: { key: CALL_ALERT_EVENT_KEY, newValue: null },
+          }),
+        );
+      }
+    } catch {
+      localStorage.removeItem(CALL_ALERT_EVENT_KEY);
+    }
+  }
+
   const clearValue = JSON.stringify({ roomId, at: Date.now() });
   localStorage.setItem(CALL_ALERT_CLEAR_EVENT_KEY, clearValue);
   window.dispatchEvent(

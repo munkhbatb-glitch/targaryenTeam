@@ -33,6 +33,7 @@ export function useVideoCall({
   const hasPeerRef = useRef(false);
   const wsReadyRef = useRef(false);
   const offerSentRef = useRef(false);
+  const shouldOfferRef = useRef(false);
   const displayNameRef = useRef(displayName);
   const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
@@ -107,6 +108,7 @@ export function useVideoCall({
     pcRef.current?.close();
     pcRef.current = null;
     offerSentRef.current = false;
+    shouldOfferRef.current = false;
     pendingOfferRef.current = null;
     pendingCandidatesRef.current = [];
     remoteStreamRef.current = null;
@@ -144,9 +146,17 @@ export function useVideoCall({
     stream.getVideoTracks().forEach((track) => pc.addTrack(track, stream));
 
     pc.ontrack = (event) => {
-      const track = event.track;
-      if (track.kind === "audio" || track.kind === "video") {
-        addRemoteTrack(track);
+      const [remoteStream] = event.streams;
+      if (remoteStream) {
+        remoteStreamRef.current = remoteStream;
+        setWaiting(false);
+        setConnected(true);
+        bindRemoteStream();
+      } else {
+        const track = event.track;
+        if (track.kind === "audio" || track.kind === "video") {
+          addRemoteTrack(track);
+        }
       }
       if (!clearSignalSentRef.current) {
         clearSignalSentRef.current = true;
@@ -178,7 +188,7 @@ export function useVideoCall({
 
     pcRef.current = pc;
     return pc;
-  }, [addRemoteTrack, cleanupPeer, broadcastClearIncomingCallAlert]);
+  }, [addRemoteTrack, bindRemoteStream, cleanupPeer, broadcastClearIncomingCallAlert]);
 
   const createOffer = useCallback(async () => {
     if (offerSentRef.current || !localStreamRef.current) return;
@@ -214,7 +224,12 @@ export function useVideoCall({
 
   const tryStartVideo = useCallback(async () => {
     if (!wsReadyRef.current || !localStreamRef.current) return;
-    if (hasPeerRef.current && !pcRef.current && !offerSentRef.current) {
+    if (
+      shouldOfferRef.current &&
+      hasPeerRef.current &&
+      !pcRef.current &&
+      !offerSentRef.current
+    ) {
       await createOffer();
     }
   }, [createOffer]);
@@ -231,6 +246,7 @@ export function useVideoCall({
     });
     hasPeerRef.current = false;
     offerSentRef.current = false;
+    shouldOfferRef.current = false;
     clearSignalSentRef.current = false;
 
     const ws = new WebSocket(getWebSocketUrl());
@@ -249,11 +265,12 @@ export function useVideoCall({
           setRoomJoined(true);
           if (data.peers >= 1) {
             hasPeerRef.current = true;
-            await tryStartVideo();
+            shouldOfferRef.current = false;
           }
           break;
         case "peer-joined":
           hasPeerRef.current = true;
+          shouldOfferRef.current = true;
           await createOffer();
           break;
         case "offer":

@@ -12,6 +12,7 @@ import {
 } from "@ant-design/icons";
 import { Modal } from "antd";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { clearIncomingCallAlert } from "@/lib/incoming-call-alert";
 
 export type MentorForBooking = {
   name: string;
@@ -457,6 +458,9 @@ export default function MentorBookingModal({
 
   function closeModal() {
     if (isClosing) return;
+    if (callInitiatedRef.current && pendingRoomIdRef.current) {
+      clearIncomingCallAlert(pendingRoomIdRef.current);
+    }
     setIsClosing(true);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
     closeTimerRef.current = window.setTimeout(() => {

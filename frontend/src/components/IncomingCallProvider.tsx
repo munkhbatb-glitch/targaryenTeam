@@ -130,7 +130,11 @@ export default function IncomingCallProvider({ children }: { children: ReactNode
         newValue?: string;
       };
       if (detail.key === CALL_ALERT_EVENT_KEY) {
-        applyIncomingCall(parseIncomingCallAlert(detail.newValue ?? null));
+        applyIncomingCall(
+          detail.newValue
+            ? parseIncomingCallAlert(detail.newValue)
+            : null,
+        );
       }
       if (detail.key === CALL_ALERT_CLEAR_EVENT_KEY) {
         applyIncomingCall(
