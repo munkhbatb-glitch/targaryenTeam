@@ -4,7 +4,6 @@ import {
   AudioMutedOutlined,
   AudioOutlined,
   DesktopOutlined,
-  MailOutlined,
   MessageOutlined,
   PhoneOutlined,
   SendOutlined,
@@ -37,7 +36,6 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const [chatOpen, setChatOpen] = useState(true);
   const [draft, setDraft] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
   const [inviteStatus, setInviteStatus] = useState("");
   const [emailConfigured, setEmailConfigured] = useState<boolean | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -66,7 +64,6 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
     roomJoined,
     error: callError,
     sendChat,
-    sendInvite,
     attachRemoteVideo,
     cleanup,
   } = useVideoCall({
@@ -115,25 +112,6 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
     setDraft("");
   }
 
-  async function handleInvite() {
-    const email = inviteEmail.trim();
-    if (!email) return;
-
-    setInviteStatus("Илгээж байна...");
-    try {
-      const result = await sendInvite(email);
-      setInviteStatus(
-        result.message ||
-          `✓ ${email} руу илгээгдлээ (${result.provider})`,
-      );
-      setInviteEmail("");
-    } catch (err) {
-      setInviteStatus(
-        err instanceof Error ? err.message : "Урилга илгээхэд алдаа гарлаа.",
-      );
-    }
-  }
-
   function endCall() {
     cleanup();
     stopStream();
@@ -169,8 +147,8 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
   }, []);
 
   return (
-    <div className="video-call-root relative flex h-dvh min-h-[600px] flex-col overflow-hidden bg-[#eceae6] p-3 sm:p-4">
-      <div className="flex min-h-0 flex-1 gap-3 sm:gap-4">
+    <div className="video-call-root relative flex h-dvh flex-col overflow-hidden bg-[#eceae6] p-3 sm:min-h-[600px] sm:p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 sm:flex-row sm:gap-4">
         <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl bg-slate-900 shadow-sm ring-1 ring-black/5">
           {connected ? (
             <video
@@ -214,10 +192,10 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
         </div>
 
         <aside
-          className={`flex w-full max-w-[340px] shrink-0 flex-col gap-3 transition-all duration-300 sm:max-w-[360px] ${
+          className={`flex w-full shrink-0 flex-col gap-3 transition-all duration-300 sm:max-w-[360px] ${
             chatOpen
               ? "opacity-100"
-              : "pointer-events-none w-0 max-w-0 overflow-hidden opacity-0"
+              : "pointer-events-none h-0 overflow-hidden opacity-0 sm:h-auto sm:w-0 sm:max-w-0"
           }`}
         >
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
@@ -286,28 +264,20 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
                 </button>
               </div>
 
-              <div className="flex items-center gap-2 rounded-xl bg-[#f5f4f2] px-3 py-2 ring-1 ring-black/5">
-                <MailOutlined className="shrink-0 text-slate-400" />
-                <input
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      void handleInvite();
-                    }
-                  }}
-                  placeholder="И-мэйлээр урих"
-                  type="email"
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
-                />
+              <div className="flex items-center justify-between gap-2 rounded-xl bg-[#f5f4f2] px-3 py-2 text-xs text-slate-600 ring-1 ring-black/5">
+                <span className="min-w-0 truncate">
+                  Уулзалтын линк {mentor.email ? `${mentor.email} руу` : ""} автоматаар
+                  илгээгдэнэ
+                </span>
                 <button
                   type="button"
-                  onClick={() => void handleInvite()}
-                  disabled={!inviteEmail.trim()}
-                  className="shrink-0 rounded-lg bg-[#CC553B] px-2.5 py-1 text-xs font-medium text-white disabled:opacity-40"
+                  className="shrink-0 underline underline-offset-2"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(getInviteUrl(roomId));
+                    setInviteStatus("Link хуулагдлаа");
+                  }}
                 >
-                  Урих
+                  link хуулах
                 </button>
               </div>
               {emailConfigured === false && (
@@ -358,7 +328,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
         </aside>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-4">
+      <div className="pointer-events-none absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-20 flex justify-center px-4">
         <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-3 py-2.5 shadow-lg ring-1 ring-black/8 backdrop-blur-md sm:gap-3 sm:px-4">
           <ControlButton
             active={micOn}

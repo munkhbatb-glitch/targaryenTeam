@@ -33,6 +33,7 @@ import { Avatar, Button, Collapse, Rate, Tag } from "antd";
 import MentorBookingModal, {
   type MentorForBooking,
 } from "@/components/MentorBookingModal";
+import { getApiBase } from "@/lib/backend";
 
 const CALL_MENTOR_KEY = "activeCallMentor";
 
@@ -72,10 +73,11 @@ export default function HomeContent() {
 
   const mentors: MentorForBooking[] = [
     {
-      name: "Gremix",
+      name: "Gundsambuu Uuganbayar",
+      email: "gundsambuu@blueprint.mn",
       title: "Senior Product Designer",
-      company: "@ Google",
-      avatarUrl: "/images/hero/expert.png",
+      company: "BluePrint",
+      avatarUrl: "/Picture.png",
       price: "₮250,000",
       pricePerSession: 45000,
       rating: 4.9,
@@ -85,10 +87,11 @@ export default function HomeContent() {
       tags: ["LLM", "Үнэлгээ", "RAG", "Үйлдвэрлэлийн AI"],
     },
     {
-      name: "Gremix",
+      name: "Batpurev Tumurbaatar",
+      email: "batpurev@example.com",
       title: "Senior Product Designer",
-      company: "@ Google",
-      avatarUrl: "/images/hero/expert.png",
+      company: "BluePrint",
+      avatarUrl: "/Batpurew.png",
       price: "₮250,000",
       pricePerSession: 60000,
       rating: 4.8,
@@ -98,10 +101,11 @@ export default function HomeContent() {
       tags: ["LLM", "Үнэлгээ", "RAG", "Үйлдвэрлэлийн AI"],
     },
     {
-      name: "Gremix",
+      name: "Munkhsaruul Enkhbat",
+      email: "munkhsaruul@example.com",
       title: "Senior Product Designer",
-      company: "@ Google",
-      avatarUrl: "/images/hero/expert.png",
+      company: "BluePrint",
+      avatarUrl: "/Saruul.png",
       price: "₮250,000",
       pricePerSession: 50000,
       rating: 4.9,
@@ -112,6 +116,7 @@ export default function HomeContent() {
     },
     {
       name: "Gremix",
+      email: "gremix@example.com",
       title: "Senior Product Designer",
       company: "@ Google",
       avatarUrl: "/images/hero/expert.png",
@@ -125,6 +130,7 @@ export default function HomeContent() {
     },
     {
       name: "Gremix",
+      email: "gremix@example.com",
       title: "Senior Product Designer",
       company: "@ Google",
       avatarUrl: "/images/hero/expert.png",
@@ -138,6 +144,7 @@ export default function HomeContent() {
     },
     {
       name: "Gremix",
+      email: "gremix@example.com",
       title: "Senior Product Designer",
       company: "@ Google",
       avatarUrl: "/images/hero/expert.png",
@@ -219,6 +226,17 @@ export default function HomeContent() {
           const roomId = `call-${Date.now()}`;
           sessionStorage.setItem(CALL_MENTOR_KEY, JSON.stringify(m));
           sessionStorage.setItem("activeCallRoom", roomId);
+          if (m.email?.trim()) {
+            fetch(`${getApiBase()}/api/invite`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: m.email.trim(),
+                roomId,
+                hostName: "Захиалагч",
+              }),
+            }).catch(() => {});
+          }
           router.push(`/call/?room=${encodeURIComponent(roomId)}`);
         }}
       />
@@ -229,7 +247,7 @@ export default function HomeContent() {
               <PlayCircleOutlined />
             </span>
             <div className="leading-tight">
-              <div className="text-sm font-semibold">Nexore</div>
+              <div className="text-sm font-semibold">Nexora</div>
             </div>
           </div>
 
@@ -501,6 +519,16 @@ export default function HomeContent() {
                       <div className="mt-0.5 truncate text-sm text-slate-500">
                         {m.company}
                       </div>
+                    ) : null}
+                    {m.email ? (
+                      <a
+                        className="mt-1 inline-flex max-w-full items-center gap-2 truncate text-sm text-slate-500 hover:text-slate-900"
+                        href={`mailto:${m.email}`}
+                        title={m.email}
+                      >
+                        <MailOutlined className="shrink-0 text-slate-400" />
+                        <span className="truncate">{m.email}</span>
+                      </a>
                     ) : null}
                   </div>
                 </div>

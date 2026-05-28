@@ -15,6 +15,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 export type MentorForBooking = {
   name: string;
+  email?: string;
   title: string;
   company?: string;
   avatarUrl?: string;

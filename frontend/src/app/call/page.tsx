@@ -10,6 +10,7 @@ const STORAGE_ROOM = "activeCallRoom";
 
 const FALLBACK_MENTOR: MentorForBooking = {
   name: "Зочин",
+  email: undefined,
   title: "Video call",
   price: "—",
   pricePerSession: 0,
