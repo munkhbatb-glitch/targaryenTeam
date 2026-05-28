@@ -166,6 +166,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
               ref={bindRemoteVideo}
               autoPlay
               playsInline
+              muted={false}
               className="size-full object-cover"
             />
           ) : (

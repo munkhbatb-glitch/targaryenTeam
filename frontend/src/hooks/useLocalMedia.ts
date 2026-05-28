@@ -38,7 +38,11 @@ export function useLocalMedia({ autoStart = true }: UseLocalMediaOptions = {}) {
       setError(null);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
-        audio: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       });
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = stream;

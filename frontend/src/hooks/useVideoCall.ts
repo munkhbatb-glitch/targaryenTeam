@@ -28,11 +28,14 @@ export function useVideoCall({
   const wsRef = useRef<WebSocket | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const hasPeerRef = useRef(false);
   const wsReadyRef = useRef(false);
   const offerSentRef = useRef(false);
   const displayNameRef = useRef(displayName);
+  const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connected, setConnected] = useState(false);
@@ -53,21 +56,50 @@ export function useVideoCall({
     ]);
   }, []);
 
-  const attachRemoteVideo = useCallback((el: HTMLVideoElement | null) => {
+  const attachRemoteMedia = useCallback((el: HTMLVideoElement | null) => {
     remoteVideoRef.current = el;
-    const stream = pcRef.current
-      ? (() => {
-          const tracks = pcRef
-            .current!.getReceivers()
-            .map((r) => r.track)
-            .filter((t): t is MediaStreamTrack => t !== null);
-          return tracks.length ? new MediaStream(tracks) : null;
-        })()
-      : null;
-
-    if (el && stream) {
-      el.srcObject = stream;
+    if (el && remoteStreamRef.current) {
+      el.srcObject = remoteStreamRef.current;
+      el.muted = false;
       void el.play().catch(() => {});
+    }
+  }, []);
+
+  const bindRemoteStream = useCallback(() => {
+    const el = remoteVideoRef.current;
+    if (!el || !remoteStreamRef.current) return;
+    el.srcObject = remoteStreamRef.current;
+    el.muted = false;
+    void el.play().catch(() => {});
+  }, []);
+
+  const addRemoteTrack = useCallback(
+    (track: MediaStreamTrack) => {
+      if (!remoteStreamRef.current) {
+        remoteStreamRef.current = new MediaStream();
+      }
+      const exists = remoteStreamRef.current
+        .getTracks()
+        .some((t) => t.id === track.id);
+      if (!exists) {
+        remoteStreamRef.current.addTrack(track);
+      }
+      setWaiting(false);
+      setConnected(true);
+      bindRemoteStream();
+    },
+    [bindRemoteStream],
+  );
+
+  const flushPendingCandidates = useCallback(async (pc: RTCPeerConnection) => {
+    const pending = pendingCandidatesRef.current;
+    pendingCandidatesRef.current = [];
+    for (const candidate of pending) {
+      try {
+        await pc.addIceCandidate(candidate);
+      } catch {
+        // ignore stale candidates
+      }
     }
   }, []);
 
@@ -75,6 +107,9 @@ export function useVideoCall({
     pcRef.current?.close();
     pcRef.current = null;
     offerSentRef.current = false;
+    pendingOfferRef.current = null;
+    pendingCandidatesRef.current = [];
+    remoteStreamRef.current = null;
     if (remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = null;
     }
@@ -105,17 +140,14 @@ export function useVideoCall({
     cleanupPeer();
 
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-    stream.getTracks().forEach((track) => {
-      pc.addTrack(track, stream);
-    });
+    stream.getAudioTracks().forEach((track) => pc.addTrack(track, stream));
+    stream.getVideoTracks().forEach((track) => pc.addTrack(track, stream));
 
     pc.ontrack = (event) => {
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.streams[0];
-        void remoteVideoRef.current.play().catch(() => {});
+      const track = event.track;
+      if (track.kind === "audio" || track.kind === "video") {
+        addRemoteTrack(track);
       }
-      setWaiting(false);
-      setConnected(true);
       if (!clearSignalSentRef.current) {
         clearSignalSentRef.current = true;
         broadcastClearIncomingCallAlert();
@@ -146,7 +178,7 @@ export function useVideoCall({
 
     pcRef.current = pc;
     return pc;
-  }, [cleanupPeer]);
+  }, [addRemoteTrack, cleanupPeer, broadcastClearIncomingCallAlert]);
 
   const createOffer = useCallback(async () => {
     if (offerSentRef.current || !localStreamRef.current) return;
@@ -164,6 +196,7 @@ export function useVideoCall({
     async (offer: RTCSessionDescriptionInit) => {
       if (!localStreamRef.current) {
         hasPeerRef.current = true;
+        pendingOfferRef.current = offer;
         return;
       }
 
@@ -171,11 +204,12 @@ export function useVideoCall({
       if (!pc || !wsRef.current) return;
 
       await pc.setRemoteDescription(offer);
+      await flushPendingCandidates(pc);
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       wsRef.current.send(JSON.stringify({ type: "answer", answer }));
     },
-    [createPeerConnection],
+    [createPeerConnection, flushPendingCandidates],
   );
 
   const tryStartVideo = useCallback(async () => {
@@ -226,11 +260,23 @@ export function useVideoCall({
           await handleOffer(data.offer);
           break;
         case "answer":
-          await pcRef.current?.setRemoteDescription(data.answer);
+          if (pcRef.current) {
+            await pcRef.current.setRemoteDescription(data.answer);
+            await flushPendingCandidates(pcRef.current);
+          }
           break;
         case "ice-candidate":
           if (data.candidate) {
-            await pcRef.current?.addIceCandidate(data.candidate);
+            const pc = pcRef.current;
+            if (!pc || !pc.remoteDescription) {
+              pendingCandidatesRef.current.push(data.candidate);
+            } else {
+              try {
+                await pc.addIceCandidate(data.candidate);
+              } catch {
+                // ignore
+              }
+            }
           }
           break;
         case "peer-left":
@@ -282,6 +328,7 @@ export function useVideoCall({
     cleanupPeer,
     createOffer,
     broadcastClearIncomingCallAlert,
+    flushPendingCandidates,
     handleOffer,
     roomId,
     tryStartVideo,
@@ -289,8 +336,40 @@ export function useVideoCall({
 
   useEffect(() => {
     if (!localStream || !roomJoined) return;
-    void tryStartVideo();
-  }, [localStream, roomJoined, tryStartVideo]);
+
+    void (async () => {
+      if (pendingOfferRef.current) {
+        const offer = pendingOfferRef.current;
+        pendingOfferRef.current = null;
+        await handleOffer(offer);
+        return;
+      }
+      await tryStartVideo();
+    })();
+  }, [localStream, roomJoined, tryStartVideo, handleOffer]);
+
+  useEffect(() => {
+    const stream = localStream;
+    const pc = pcRef.current;
+    if (!stream || !pc) return;
+
+    for (const sender of pc.getSenders()) {
+      if (sender.track?.kind === "audio") {
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack && sender.track?.id !== audioTrack.id) {
+          void sender.replaceTrack(audioTrack);
+        }
+      }
+      if (sender.track?.kind === "video") {
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack && sender.track?.id !== videoTrack.id) {
+          void sender.replaceTrack(videoTrack);
+        } else if (!videoTrack && sender.track) {
+          void sender.replaceTrack(null);
+        }
+      }
+    }
+  }, [localStream]);
 
   const sendChat = useCallback(
     (text: string) => {
@@ -354,7 +433,7 @@ export function useVideoCall({
     error,
     sendChat,
     sendInvite,
-    attachRemoteVideo,
+    attachRemoteVideo: attachRemoteMedia,
     cleanup: cleanupAll,
   };
 }
