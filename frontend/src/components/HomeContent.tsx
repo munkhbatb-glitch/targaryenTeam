@@ -27,6 +27,7 @@ import {
 import type { ReactNode } from "react";
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Avatar, Button } from "antd";
 import MentorBookingModal, {
   type MentorForBooking,
@@ -43,6 +44,7 @@ import {
 } from "@/components/IncomingCallProvider";
 
 export default function HomeContent() {
+  const router = useRouter();
   const { broadcastCallToLobby } = useIncomingCallAlert();
   const [bookingMentor, setBookingMentor] = useState<MentorForBooking | null>(
     null,
@@ -213,6 +215,10 @@ export default function HomeContent() {
     },
   ];
 
+  function handleJoinCall(_m: MentorForBooking, roomId: string) {
+    router.push(`/call/?room=${encodeURIComponent(roomId)}`);
+  }
+
   function handleCallInitiated(m: MentorForBooking, roomId: string) {
     markCallInitiated(roomId);
     sessionStorage.setItem(CALL_MENTOR_KEY, JSON.stringify(m));
@@ -247,6 +253,7 @@ export default function HomeContent() {
         open={bookingMentor !== null}
         onClose={() => setBookingMentor(null)}
         onCallInitiated={handleCallInitiated}
+        onJoinCall={handleJoinCall}
       />
       <div className="sticky top-0 z-30 border-b border-black/5 bg-[#fbfaf8]/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4">

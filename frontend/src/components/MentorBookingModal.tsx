@@ -34,6 +34,8 @@ type Props = {
   onClose: () => void;
   /** Дуудлага эхлэх үед (төлбөр амжилттай) шууд дуудагдана */
   onCallInitiated?: (mentor: MentorForBooking, roomId: string) => void;
+  /** Эхлүүлэгч видео уулзалтад орно */
+  onJoinCall?: (mentor: MentorForBooking, roomId: string) => void;
   onBookingComplete?: (mentor: MentorForBooking) => void;
 };
 
@@ -371,6 +373,7 @@ export default function MentorBookingModal({
   open,
   onClose,
   onCallInitiated,
+  onJoinCall,
   onBookingComplete,
 }: Props) {
   const today = useMemo(() => new Date(), []);
@@ -452,19 +455,28 @@ export default function MentorBookingModal({
 
   const qrPayload = `${mentor?.name}-${formatDateDisplay(selectedDate)}-${selectedTime}-${totalPrice}`;
 
-  function handleClose(fromSuccess = false) {
+  function closeModal() {
     if (isClosing) return;
     setIsClosing(true);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
     closeTimerRef.current = window.setTimeout(() => {
-      if (fromSuccess && mentor && !completedRef.current) {
-        completedRef.current = true;
-        onBookingComplete?.(mentor);
-      }
       setIsClosing(false);
       setPaymentPhase("qr");
       onClose();
     }, 420);
+  }
+
+  function joinVideoCall() {
+    if (!mentor || isClosing) return;
+    const roomId = pendingRoomIdRef.current;
+    if (!roomId) return;
+    if (!callInitiatedRef.current) initiateCallAlert();
+    if (!completedRef.current) {
+      completedRef.current = true;
+      onBookingComplete?.(mentor);
+    }
+    onJoinCall?.(mentor, roomId);
+    closeModal();
   }
 
   function handleCheckPayment() {
@@ -475,7 +487,7 @@ export default function MentorBookingModal({
       setPaymentPhase("success");
       initiateCallAlert();
       closeTimerRef.current = window.setTimeout(() => {
-        handleClose(true);
+        joinVideoCall();
       }, 3200);
     }, 1400);
   }
@@ -484,14 +496,14 @@ export default function MentorBookingModal({
 
   if (step === "payment") {
     return (
-      <BookingModalShell open={open} onClose={handleClose} width={420}>
+      <BookingModalShell open={open} onClose={closeModal} width={420}>
         <PaymentFlowCard
           phase={paymentPhase}
           isClosing={isClosing}
           totalPrice={totalPrice}
           qrPayload={qrPayload}
           onCheckPayment={handleCheckPayment}
-          onJoinCall={() => handleClose(true)}
+          onJoinCall={joinVideoCall}
           onBack={() => {
             if (paymentPhase !== "qr") return;
             setStep("booking");
