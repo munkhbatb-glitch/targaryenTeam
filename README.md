@@ -22,6 +22,19 @@ npm run start:prod
 
 Browser: **https://localhost:3443**
 
+## Dev mode (frontend + backend зэрэг)
+
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Frontend: `http://localhost:3000`  
+Backend: `https://localhost:3443`
+
+> Анхаарах: dev үед backend-ийн HTTP redirect порт `3001` дээр ажиллана (frontend `3000`-г эзэлдэг тул).
+
 ## Үнэгүй demo deploy (GitHub + Render)
 
 ### 1. GitHub repo үүсгэх
@@ -42,7 +55,7 @@ git push -u origin main
 1. [render.com](https://render.com) → **New +** → **Blueprint** (эсвэл **Web Service**)
 2. GitHub repo холбох
 3. `render.yaml` автоматаар уншигдана (эсвэл гараар):
-   - **Build:** `npm install && npm run build`
+   - **Build:** `npm install; npm run build` (PowerShell дээр `&&` ажиллахгүй байж болно)
    - **Start:** `npm run start:prod`
 4. **Environment variables** (Render dashboard):
 

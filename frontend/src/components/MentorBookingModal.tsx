@@ -16,6 +16,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 export type MentorForBooking = {
   name: string;
   title: string;
+  company?: string;
+  avatarUrl?: string;
   price: string;
   pricePerSession: number;
   rating: number;
@@ -174,14 +176,14 @@ type BookingStep = "booking" | "payment";
 type PaymentPhase = "qr" | "checking" | "success";
 
 const CONFETTI_PIECES = [
-  { top: "6%", left: "20%", rotate: 18, color: "#ff4d2d", w: 10, h: 10, round: false, delay: "0s" },
+  { top: "6%", left: "20%", rotate: 18, color: "#CC553B", w: 10, h: 10, round: false, delay: "0s" },
   { top: "12%", left: "74%", rotate: -24, color: "#1f2937", w: 8, h: 14, round: false, delay: "0.15s" },
   { top: "20%", left: "10%", rotate: 42, color: "#d4a574", w: 12, h: 6, round: false, delay: "0.3s" },
-  { top: "16%", left: "56%", rotate: -8, color: "#ff4d2d", w: 7, h: 7, round: true, delay: "0.08s" },
-  { top: "30%", left: "80%", rotate: 30, color: "#c45c3e", w: 9, h: 9, round: false, delay: "0.22s" },
+  { top: "16%", left: "56%", rotate: -8, color: "#CC553B", w: 7, h: 7, round: true, delay: "0.08s" },
+  { top: "30%", left: "80%", rotate: 30, color: "#B64A33", w: 9, h: 9, round: false, delay: "0.22s" },
   { top: "36%", left: "14%", rotate: -35, color: "#1f2937", w: 6, h: 6, round: true, delay: "0.4s" },
   { top: "46%", left: "86%", rotate: 12, color: "#fde2d2", w: 11, h: 5, round: false, delay: "0.12s" },
-  { top: "50%", left: "6%", rotate: -18, color: "#ff4d2d", w: 8, h: 12, round: false, delay: "0.28s" },
+  { top: "50%", left: "6%", rotate: -18, color: "#CC553B", w: 8, h: 12, round: false, delay: "0.28s" },
   { top: "60%", left: "68%", rotate: 45, color: "#d4a574", w: 10, h: 10, round: false, delay: "0.35s" },
   { top: "66%", left: "26%", rotate: -12, color: "#1f2937", w: 7, h: 7, round: true, delay: "0.18s" },
 ] as const;
@@ -270,7 +272,7 @@ function PaymentFlowCard({
         }`}
       >
         <div className="flex flex-col items-center gap-3">
-          <span className="size-10 animate-spin rounded-full border-[3px] border-[#ff4d2d]/25 border-t-[#ff4d2d]" />
+          <span className="size-10 animate-spin rounded-full border-[3px] border-[#CC553B]/25 border-t-[#CC553B]" />
           <p className="text-sm font-medium text-slate-600">Төлбөр шалгаж байна...</p>
         </div>
       </div>
@@ -284,7 +286,7 @@ function PaymentFlowCard({
       >
         <div className="relative flex size-28 items-center justify-center">
           <span className="booking-success-ring absolute inset-0 rounded-full bg-[#fde2d2]/80" />
-          <span className="booking-success-icon relative grid size-[72px] place-items-center rounded-full bg-[#ff4d2d] shadow-md">
+          <span className="booking-success-icon relative grid size-[72px] place-items-center rounded-full bg-[#CC553B] shadow-md">
             <CheckOutlined className="text-3xl text-white" />
           </span>
         </div>
@@ -293,14 +295,14 @@ function PaymentFlowCard({
           Захиалга амжилттай бүртгэгдлээ
         </h3>
         <p className="booking-success-desc mx-auto mt-4 max-w-xs text-sm leading-relaxed text-slate-500">
-          Таны 1-1 менторшипын уулзалт амжилттай захиалагдлаа.
+          Таны 1-1 гишүүншипын уулзалт амжилттай захиалагдлаа.
           <br />
           Баталгаажуулалтыг и-мэйлээр илгээлээ.
         </p>
         <button
           type="button"
           onClick={onJoinCall}
-          className="booking-success-title mt-6 rounded-xl bg-[#ff4d2d] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#ff3b18]"
+          className="booking-success-title mt-6 rounded-xl bg-[#CC553B] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#B64A33]"
         >
           Видео уулзалт эхлүүлэх
         </button>
@@ -315,7 +317,7 @@ function PaymentFlowCard({
           type="button"
           disabled={isChecking}
           onClick={onCheckPayment}
-          className="w-full rounded-xl bg-[#ff4d2d] py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#ff3b18] disabled:opacity-70"
+          className="w-full rounded-xl bg-[#CC553B] py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#B64A33] disabled:opacity-70"
         >
           Төлбөр шалгах
         </button>
@@ -486,7 +488,7 @@ export default function MentorBookingModal({
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-black/5 p-5 md:border-r md:p-6">
           <div className="flex items-start gap-3">
             <div
-              className="grid size-14 shrink-0 place-items-center rounded-full text-lg font-semibold text-[#ff4d2d]"
+              className="grid size-14 shrink-0 place-items-center rounded-full text-lg font-semibold text-[#CC553B]"
               style={{ backgroundColor: "#fff1f0" }}
             >
               {mentor.name.slice(0, 1)}
@@ -573,7 +575,7 @@ export default function MentorBookingModal({
                   >
                     {day}
                     {hasSlots && !isSelected && (
-                      <span className="absolute bottom-1 size-1 rounded-full bg-[#ff4d2d]" />
+                      <span className="absolute bottom-1 size-1 rounded-full bg-[#CC553B]" />
                     )}
                   </button>
                 );
@@ -671,7 +673,7 @@ export default function MentorBookingModal({
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
                 className="mt-2 w-full resize-none rounded-xl border border-black/10 bg-[#fafaf9] px-3 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10"
-                placeholder="Уулзалтаас өмнө ментортой хуваалцах зүйлээ бичнэ үү..."
+                placeholder="Уулзалтаас өмнө гишүүнтэй хуваалцах зүйлээ бичнэ үү..."
               />
             </div>
 
@@ -688,7 +690,7 @@ export default function MentorBookingModal({
             <button
               type="button"
               onClick={() => setStep("payment")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff4d2d] py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#ff3b18]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#CC553B] py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#B64A33]"
             >
               Төлбөр төлөх
               <ArrowRightOutlined />

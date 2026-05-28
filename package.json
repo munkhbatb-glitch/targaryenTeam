@@ -3,12 +3,16 @@
   "version": "1.0.0",
   "description": "WebRTC video call with NestJS + Next.js frontend",
   "scripts": {
+    "dev:backend": "nest start --watch",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently -n backend,frontend -c blue,green \"cross-env HTTP_PORT=3001 npm run dev:backend\" \"npm run dev:frontend\"",
     "build:frontend": "npm --prefix frontend install && npm --prefix frontend run build",
     "build:backend": "tsc -p tsconfig.json",
     "build": "npm run build:frontend && npm run build:backend",
     "start": "node dist/main",
     "start:dev": "nest start --watch",
-    "start:prod": "node dist/main"
+    "start:prod": "node dist/main",
+    "prod": "npm run build && npm run start:prod"
   },
   "engines": {
     "node": "22.x"
@@ -21,12 +25,12 @@
     "@nestjs/platform-ws": "^11.0.12",
     "@nestjs/serve-static": "^5.0.3",
     "@nestjs/websockets": "^11.0.12",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
     "better-sqlite3": "^11.9.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "nodemailer": "^6.10.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
     "selfsigned": "^2.4.1",
     "ws": "^8.18.0"
   },
@@ -34,9 +38,11 @@
     "@nestjs/cli": "^11.0.6",
     "@types/better-sqlite3": "^7.6.12",
     "@types/express": "^5.0.1",
-    "@types/nodemailer": "^6.4.17",
     "@types/node": "^22.13.10",
+    "@types/nodemailer": "^6.4.17",
     "@types/ws": "^8.5.14",
+    "concurrently": "^9.2.1",
+    "cross-env": "^7.0.3",
     "typescript": "^5.8.2"
   }
 }

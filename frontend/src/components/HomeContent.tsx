@@ -12,6 +12,7 @@ import {
   EnvironmentOutlined,
   FacebookOutlined,
   InstagramOutlined,
+  ClockCircleOutlined,
   MailOutlined,
   PhoneOutlined,
   PlayCircleOutlined,
@@ -20,6 +21,7 @@ import {
   SearchOutlined,
   StarFilled,
   StarOutlined,
+  TeamOutlined,
   VideoCameraOutlined,
   YoutubeOutlined,
 } from "@ant-design/icons";
@@ -40,9 +42,9 @@ export default function HomeContent() {
     null,
   );
   const stats = [
-    { label: "Ментор", value: "5K+" },
-    { label: "Салбар", value: "100+" },
-    { label: "Үнэлгээ", value: "4.8" },
+    { label: "Expert Mentors", value: "5K+" },
+    { label: "Sessions Completed", value: "50K+" },
+    { label: "Average Rating", value: "4.9" },
   ];
 
   const categories: {
@@ -70,70 +72,82 @@ export default function HomeContent() {
 
   const mentors: MentorForBooking[] = [
     {
-      name: "Г. Саруул",
-      title: "Product Designer · 7 жил",
-      price: "₮45,000",
+      name: "Gremix",
+      title: "Senior Product Designer",
+      company: "@ Google",
+      avatarUrl: "/images/hero/expert.png",
+      price: "₮250,000",
       pricePerSession: 45000,
       rating: 4.9,
       reviews: 128,
       meetings: 412,
       years: 7,
-      tags: ["UX", "Portfolio", "Career"],
+      tags: ["LLM", "Үнэлгээ", "RAG", "Үйлдвэрлэлийн AI"],
     },
     {
-      name: "Б. Тэмүүлэн",
-      title: "Software Engineer · 6 жил",
-      price: "₮60,000",
+      name: "Gremix",
+      title: "Senior Product Designer",
+      company: "@ Google",
+      avatarUrl: "/images/hero/expert.png",
+      price: "₮250,000",
       pricePerSession: 60000,
       rating: 4.8,
       reviews: 94,
       meetings: 318,
       years: 6,
-      tags: ["React", "Interview", "System"],
+      tags: ["LLM", "Үнэлгээ", "RAG", "Үйлдвэрлэлийн AI"],
     },
     {
-      name: "Н. Энхжин",
-      title: "Growth Marketer · 5 жил",
-      price: "₮50,000",
+      name: "Gremix",
+      title: "Senior Product Designer",
+      company: "@ Google",
+      avatarUrl: "/images/hero/expert.png",
+      price: "₮250,000",
       pricePerSession: 50000,
       rating: 4.9,
       reviews: 71,
       meetings: 256,
       years: 5,
-      tags: ["Ads", "Analytics", "Funnel"],
+      tags: ["LLM", "Үнэлгээ", "RAG", "Үйлдвэрлэлийн AI"],
     },
     {
-      name: "Д. Бат-Оргил",
-      title: "Sales Lead · 8 жил",
-      price: "₮55,000",
+      name: "Gremix",
+      title: "Senior Product Designer",
+      company: "@ Google",
+      avatarUrl: "/images/hero/expert.png",
+      price: "₮250,000",
       pricePerSession: 55000,
       rating: 4.7,
       reviews: 63,
       meetings: 289,
       years: 8,
-      tags: ["CRM", "Pitch", "Negotiation"],
+      tags: ["LLM", "Үнэлгээ", "RAG", "Үйлдвэрлэлийн AI"],
     },
     {
-      name: "Ц. Мөнх-Эрдэнэ",
-      title: "Finance Manager · 9 жил",
-      price: "₮70,000",
+      name: "Gremix",
+      title: "Senior Product Designer",
+      company: "@ Google",
+      avatarUrl: "/images/hero/expert.png",
+      price: "₮250,000",
       pricePerSession: 70000,
       rating: 4.8,
       reviews: 52,
       meetings: 198,
       years: 9,
-      tags: ["Budget", "KPI", "Reporting"],
+      tags: ["LLM", "Үнэлгээ", "RAG", "Үйлдвэрлэлийн AI"],
     },
     {
-      name: "О. Номин",
-      title: "HRBP · 6 жил",
-      price: "₮48,000",
+      name: "Gremix",
+      title: "Senior Product Designer",
+      company: "@ Google",
+      avatarUrl: "/images/hero/expert.png",
+      price: "₮250,000",
       pricePerSession: 48000,
       rating: 4.9,
       reviews: 86,
       meetings: 334,
       years: 6,
-      tags: ["CV", "Hiring", "Culture"],
+      tags: ["LLM", "Үнэлгээ", "RAG", "Үйлдвэрлэлийн AI"],
     },
   ];
 
@@ -146,8 +160,8 @@ export default function HomeContent() {
   }[] = [
     {
       number: "01",
-      title: "Mentor олох",
-      desc: "AI-д асуулт тавь эсвэл 5,000+ mentor-аас хайж тохирохыг ол. Ур чадвар, үнэ, цаг зэргийг шүүж болно.",
+      title: "Гишүүн олох",
+      desc: "AI-д асуулт тавь эсвэл 5,000+ гишүүнээс хайж тохирохыг ол. Ур чадвар, үнэ, цаг зэргийг шүүж болно.",
       icon: <SearchOutlined />,
       stats: [
         { value: "96%", label: "AI Match" },
@@ -167,7 +181,7 @@ export default function HomeContent() {
     {
       number: "03",
       title: "Уулзалтаа эхлэх",
-      desc: "HD чанартай видео уулзалтаар ментороосоо шууд зөвлөгөө ав. Автоматаар бичлэг хадгалагдана.",
+      desc: "HD чанартай видео уулзалтаар гишүүнээсээ шууд зөвлөгөө ав. Автоматаар бичлэг хадгалагдана.",
       icon: <VideoCameraOutlined />,
       stats: [
         { value: "1080p", label: "HD Quality" },
@@ -178,8 +192,8 @@ export default function HomeContent() {
 
   const faqs = [
     {
-      q: "Ментортой уулзалт хэр удаан үргэлжилдэг вэ?",
-      a: "Ихэнх уулзалт 45–60 минут байна. Зарим ментор 30 минутын хурдан зөвлөгөө санал болгодог.",
+      q: "Гишүүнтэй уулзалт хэр удаан үргэлжилдэг вэ?",
+      a: "Ихэнх уулзалт 45–60 минут байна. Зарим гишүүн 30 минутын хурдан зөвлөгөө санал болгодог.",
     },
     {
       q: "Төлбөр хэрхэн төлөх вэ?",
@@ -191,7 +205,7 @@ export default function HomeContent() {
     },
     {
       q: "Ямар төрлийн зөвлөгөө авч болох вэ?",
-      a: "CV/портфолио, interview prep, roadmap, карьер шилжилт, баг/менежмент, өсөлтийн стратеги зэрэг.",
+      a: "CV/portfolio, interview prep, roadmap, career change, management, growth strategy.",
     },
   ];
 
@@ -215,8 +229,7 @@ export default function HomeContent() {
               <PlayCircleOutlined />
             </span>
             <div className="leading-tight">
-              <div className="text-sm font-semibold">Видео</div>
-              <div className="text-[12px] text-slate-500">Карьер менторшип</div>
+              <div className="text-sm font-semibold">Nexore</div>
             </div>
           </div>
 
@@ -239,7 +252,7 @@ export default function HomeContent() {
             <Button className="hidden rounded-full md:inline-flex">Нэвтрэх</Button>
             <Button
               type="primary"
-              className="rounded-full bg-[#ff4d2d] shadow-sm hover:!bg-[#ff3b18]"
+              className="rounded-full bg-[#CC553B] shadow-sm hover:!bg-[#B64A33]"
               icon={<ArrowRightOutlined />}
             >
               Эхлэх
@@ -253,41 +266,37 @@ export default function HomeContent() {
           <div className="grid items-center gap-10 md:grid-cols-2">
             <div>
               <div className="mb-4 flex flex-wrap items-center gap-2">
-                <Tag color="orange" className="rounded-full">
-                  Шинэ
-                </Tag>
                 <span className="text-sm text-slate-600">
-                  Хамгийн зөв ментортойгоо холбогдоорой
+                Шууд менторшипын платформ
                 </span>
               </div>
               <h1 className="text-balance text-3xl font-semibold leading-tight md:text-5xl">
-                Карьераа өсгөх хамгийн зөв менторшип
+                Карьераа өсгөх хамгийн зөв гишүүнийг ол
               </h1>
               <p className="mt-4 text-pretty text-base leading-relaxed text-slate-600 md:text-lg">
-                Таны зорилгод тохирсон менторыг ол. CV/портфолио, interview prep,
-                roadmap, чиглэл сонголт гээд бодитоор ахиулна.
+              Салбарын шилдэг мэргэжилтнүүдтэй 1-on-1 уулзалт хийж, шууд видео дуудлагаар суралц.
               </p>
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <Button
                   type="primary"
                   size="large"
-                  className="rounded-full bg-[#ff4d2d] shadow-sm hover:!bg-[#ff3b18]"
+                  className="rounded-full bg-[#CC553B] shadow-sm hover:!bg-[#B64A33]"
                   icon={<ArrowRightOutlined />}
                 >
-                  Ментор хайх
+                 Мэрэгжилтэн олох
                 </Button>
                 <Button
                   size="large"
                   className="rounded-full border border-black/10 bg-white"
                   icon={<SearchOutlined />}
                 >
-                  Демо үзэх
+                  Мэрэгжилтэн болох
                 </Button>
               </div>
 
               <div className="mt-6 flex flex-wrap gap-6 text-sm text-slate-600">
-                {["Шуурхай уулзалт", "Verified менторууд", "Тодорхой roadmap"].map(
+                {["Шуурхай уулзалт", "Verified гишүүд", "Тодорхой roadmap"].map(
                   (t) => (
                     <div key={t} className="flex items-center gap-2">
                       <CheckCircleFilled className="text-emerald-600" />
@@ -306,10 +315,16 @@ export default function HomeContent() {
                     <div className="text-[12px] text-slate-500">{s.label}</div>
                   </div>
                 ))}
-                <div className="ml-auto hidden items-center gap-2 text-sm text-slate-600 md:flex">
-                  <StarFilled className="text-amber-500" />
-                  <span className="font-medium text-slate-900">4.8</span>
-                  <span className="text-slate-500">Дундаж үнэлгээ</span>
+                <div className="ml-auto hidden items-center gap-3 md:flex">
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <StarFilled key={i} className="text-yellow-400" />
+                    ))}
+                  </div>
+                  <div className="leading-tight">
+                    <div className="text-sm font-semibold text-slate-900">4.9</div>
+                    <div className="text-[12px] text-slate-500">Average Rating</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -356,7 +371,7 @@ export default function HomeContent() {
         >
           <div className="text-center">
             <div className="inline-flex items-center gap-2 rounded-full bg-[#fde2d2] px-4 py-1.5 text-sm font-medium text-[#3d2a24]">
-              <span className="size-2 rounded-full bg-[#d6684a]" />
+              <span className="size-2 rounded-full bg-[#CC553B]" />
               Салбараар харах
             </div>
             <h2 className="mt-5 text-balance text-3xl font-semibold text-slate-900 md:text-4xl">
@@ -383,7 +398,7 @@ export default function HomeContent() {
                     <span className="font-semibold text-[#e67e5f]">
                       {c.count}
                     </span>{" "}
-                    <span className="text-slate-500">mentor</span>
+                    <span className="text-slate-500">гишүүн</span>
                   </p>
                 </div>
               ))}
@@ -393,37 +408,36 @@ export default function HomeContent() {
         <section className="mx-auto w-full max-w-6xl px-5 py-12 md:py-14">
           <div className="text-center">
             <div className="inline-flex items-center gap-2 rounded-full bg-[#fde2d2] px-4 py-1.5 text-sm font-medium text-[#3d2a24]">
-              <span className="size-2 rounded-full bg-[#d6684a]" />
-              60 секундэд тохируулах
+              <span className="size-2 rounded-full bg-[#CC553B]" />
+              Сэдвээр харах
             </div>
             <h2 className="mt-5 text-balance text-3xl font-semibold text-slate-900 md:text-4xl">
-              Зорилгоо хуваалцана уу
+            Бүх салбарт мэргэжилтэн
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 md:text-base">
-              Таны карьерын зорилго, туршлага, ур чадвар болон сонирхолд
-              үндэслэн хамгийн тохирох менторыг олно.
+            Өөрийн карьерын зорилгод нийцсэн мэргэжилтнийг хайж олно уу
             </p>
           </div>
 
           <div className="mt-10 rounded-3xl border border-black/10 bg-white p-6 shadow-sm md:p-10 lg:p-12">
               <div className="grid gap-10 md:grid-cols-2 md:items-center lg:gap-14">
                 <div>
-                  <div className="flex items-center gap-2 text-sm font-medium text-[#d6684a]">
+                  <div className="flex items-center gap-2 text-sm font-medium text-[#CC553B]">
                     <StarOutlined className="text-base" />
-                    AI-аар тохируулсан менторууд
+                    AI-аар тохируулсан гишүүд
                   </div>
                   <h3 className="mt-4 text-balance text-2xl font-semibold leading-snug text-black md:text-3xl">
                     5 богино асуултанд хариулаарай. Хамгийн төгс санал авна.
                   </h3>
                   <p className="mt-4 text-sm leading-relaxed text-slate-600 md:text-base">
                     Таны карьерын зорилго, туршлага, ур чадвар болон сонирхолд
-                    үндэслэн манай AI систем хамгийн тохирох менторыг санал
+                    үндэслэн манай AI систем хамгийн тохирох гишүүнийг санал
                     болгоно.
                   </p>
                   <Button
                     type="primary"
                     size="large"
-                    className="mt-6 h-12 rounded-full border-0 bg-[#d6684a] px-8 shadow-sm hover:!bg-[#c45a3f]"
+                    className="mt-6 h-12 rounded-full border-0 bg-[#CC553B] px-8 shadow-sm hover:!bg-[#B64A33]"
                     icon={<ArrowRightOutlined />}
                     iconPlacement="end"
                   >
@@ -450,78 +464,88 @@ export default function HomeContent() {
           id="meregjiltnuud"
           className="mx-auto w-full max-w-6xl scroll-mt-24 px-5 py-12 md:py-14"
         >
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-[#ff4d2d]">Шилдэг менторууд</p>
-              <h2 className="mt-2 text-2xl font-semibold md:text-3xl">
-                Танд тохирох менторыг сонго
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm text-slate-600 md:text-base">
-                Туршлагатай менторууд — карьер, ур чадвар, interview, өсөлтөд
-                чиглэсэн зөвлөгөө.
-              </p>
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#fde2d2] px-4 py-1.5 text-sm font-medium text-[#3d2a24]">
+              <span className="size-2 rounded-full bg-[#CC553B]" />
+              Санал болгох
             </div>
-            <Button className="rounded-full">Бүгдийг харах</Button>
+            <h2 className="mt-5 text-balance text-3xl font-semibold text-slate-900 md:text-4xl">
+            Шилдэг гишүүд
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 md:text-base">
+            Verified, top-rated мэргэжилтнүүдтэй холбогд
+            </p>
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {mentors.map((m) => (
+            {mentors.map((m, i) => (
               <div
-                key={m.name}
-                className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                key={`${m.name}-${i}`}
+                className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Avatar
-                      size={44}
-                      style={{
-                        backgroundColor: "#fff1f0",
-                        color: "#ff4d2d",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {m.name.slice(0, 1)}
-                    </Avatar>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold">{m.name}</div>
-                      <div className="truncate text-xs text-slate-500">{m.title}</div>
+                <div className="flex items-start gap-3">
+                  <Avatar
+                    size={80}
+                    src={m.avatarUrl ?? "/images/hero/expert.png"}
+                    className="shrink-0"
+                    style={{ borderRadius: 18 }}
+                  />
+                  <div className="min-w-0">
+                    <div className="truncate text-base font-semibold text-slate-900">
+                      {m.name}
                     </div>
-                  </div>
-                  <div className="shrink-0 text-sm font-semibold text-slate-900">
-                    {m.price}
+                    <div className="mt-0.5 truncate text-sm text-slate-500">
+                      {m.title}
+                    </div>
+                    {m.company ? (
+                      <div className="mt-0.5 truncate text-sm text-slate-500">
+                        {m.company}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center gap-2 text-sm">
-                  <Rate disabled allowHalf defaultValue={m.rating} />
-                  <span className="font-medium text-slate-900">{m.rating}</span>
-                  <span className="text-slate-500">({m.reviews})</span>
+                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <StarFilled className="text-yellow-400" />
+                    <span className="font-medium text-slate-900">{m.rating}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <TeamOutlined className="text-slate-400" />
+                    <span>{m.meetings} уулзалт</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ClockCircleOutlined className="text-slate-400" />
+                    <span>{m.years} жил</span>
+                  </div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                   {m.tags.map((t) => (
                     <span
                       key={t}
-                      className="rounded-full bg-[#fbfaf8] px-3 py-1 text-xs text-slate-700 ring-1 ring-black/5"
+                      className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600"
                     >
                       {t}
                     </span>
                   ))}
                 </div>
 
-                <div className="mt-5 grid gap-2">
-                  <Button
-                    type="primary"
-                    className="rounded-xl bg-[#ff4d2d] shadow-sm hover:!bg-[#ff3b18]"
-                    icon={<ArrowRightOutlined />}
-                    block
-                    onClick={() => setBookingMentor(m)}
-                  >
-                    Уулзалт товлох
-                  </Button>
-                  <Button className="rounded-xl" block>
-                    Профайл үзэх
-                  </Button>
+                <div className="mt-5 border-t border-dashed border-black/10 pt-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="text-base font-semibold text-slate-900">
+                      {m.price}{" "}
+                      <span className="text-sm font-medium text-slate-500">
+                        /уулзалт
+                      </span>
+                    </div>
+                    <Button
+                      className="h-9 rounded-full bg-black px-5 text-sm font-medium text-white hover:!bg-black/90"
+                      onClick={() => setBookingMentor(m)}
+                    >
+                      Цаг товлох
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -541,7 +565,7 @@ export default function HomeContent() {
               Гурван алхам жинхэнэ өсөлт
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 md:text-base">
-              Ментор олох, захиалах, уулзалтаа эхлэх — бүгдийг хэдхэн алхмаар
+              Гишүүн олох, захиалах, уулзалтаа эхлэх — бүгдийг хэдхэн алхмаар
               хий.
             </p>
           </div>
@@ -590,26 +614,34 @@ export default function HomeContent() {
 
         <section className="mx-auto w-full max-w-6xl px-5 pb-14">
           <div className="text-center">
-            <p className="text-sm font-medium text-[#ff4d2d]">
-              Хамгийн түгээмэл асуултууд
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold md:text-3xl">
-              Асуулт асуух уу?
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#fde2d2] px-4 py-1.5 text-sm font-medium text-[#3d2a24]">
+              <span className="size-2 rounded-full bg-[#CC553B]" />
+              Түгээмэл асуулт хариулт
+            </div>
+            <h2 className="mt-5 text-balance text-3xl font-semibold text-slate-900 md:text-4xl">
+              Хамгийм түгээмэл асуудаг асуултууд
             </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 md:text-base">
+              Хурдан ойлгомжтой хариултууд — танд хэрэгтэй мэдээллийг нэг дороос.
+            </p>
           </div>
 
-          <div className="mx-auto mt-8 max-w-3xl">
-            <Collapse
-              bordered={false}
-              className="bg-transparent"
-              items={faqs.map((f) => ({
-                key: f.q,
-                label: <span className="font-medium">{f.q}</span>,
-                children: <p className="text-sm text-slate-600">{f.a}</p>,
-                className:
-                  "mb-3 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm",
-              }))}
-            />
+          <div className="mx-auto mt-10 max-w-5xl">
+            <div className="border-t border-black/10">
+              {faqs.map((f) => (
+                <div
+                  key={f.q}
+                  className="grid gap-4 border-b border-black/10 py-8 md:grid-cols-[1fr_1.35fr] md:gap-10"
+                >
+                  <div className="text-sm font-medium text-slate-900 md:text-base">
+                    {f.q}
+                  </div>
+                  <div className="text-sm leading-relaxed text-slate-600 md:text-base">
+                    {f.a}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </main>
@@ -626,7 +658,7 @@ export default function HomeContent() {
               </div>
               <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">
                 Карьерын зөвлөгөө, roadmap, interview prep — танд тохирох
-                ментортой холбогдох хамгийн хурдан арга.
+                гишүүнтэй холбогдох хамгийн хурдан арга.
               </p>
               <div className="mt-5 flex gap-2">
                 <a
@@ -660,7 +692,7 @@ export default function HomeContent() {
               },
               {
                 title: "Компан",
-                links: ["Бидний тухай", "Ментор болох", "Мэдээ", "Холбоо"],
+                links: ["Бидний тухай", "Гишүүн болох", "Мэдээ", "Холбоо"],
               },
               {
                 title: "Тусламж",

@@ -141,6 +141,32 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
   }
 
   const statusError = error || callError;
+  const renderMessageText = useCallback((text: string): ReactNode => {
+    const urlRegex = /((?:https?:\/\/|www\.)[^\s<]+)/gi;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, idx) => {
+      if (!part) return null;
+
+      if (urlRegex.test(part)) {
+        const href = part.startsWith("http") ? part : `https://${part}`;
+        return (
+          <a
+            key={`${idx}-${href}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:opacity-90"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+
+      return <span key={idx}>{part}</span>;
+    });
+  }, []);
 
   return (
     <div className="video-call-root relative flex h-dvh min-h-[600px] flex-col overflow-hidden bg-[#eceae6] p-3 sm:p-4">
@@ -228,7 +254,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
                         {msg.sender}
                       </div>
                     )}
-                    {msg.text}
+                    {renderMessageText(msg.text)}
                   </div>
                 </div>
               ))}
@@ -253,7 +279,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
                   type="button"
                   onClick={sendMessage}
                   disabled={!draft.trim()}
-                  className="shrink-0 text-[#ff4d2d] transition hover:text-[#ff3b18] disabled:opacity-40"
+                  className="shrink-0 text-[#CC553B] transition hover:text-[#B64A33] disabled:opacity-40"
                   aria-label="Илгээх"
                 >
                   <SendOutlined className="text-base" />
@@ -279,7 +305,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
                   type="button"
                   onClick={() => void handleInvite()}
                   disabled={!inviteEmail.trim()}
-                  className="shrink-0 rounded-lg bg-[#ff4d2d] px-2.5 py-1 text-xs font-medium text-white disabled:opacity-40"
+                  className="shrink-0 rounded-lg bg-[#CC553B] px-2.5 py-1 text-xs font-medium text-white disabled:opacity-40"
                 >
                   Урих
                 </button>
@@ -377,7 +403,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
               <button
                 type="button"
                 onClick={() => void startCamera()}
-                className="mt-2 font-medium text-[#ff4d2d] hover:underline"
+                className="mt-2 font-medium text-[#CC553B] hover:underline"
               >
                 Дахин оролдох
               </button>
