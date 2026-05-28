@@ -363,7 +363,7 @@ export default function HomeContent() {
             } satisfies IncomingCallAlert);
             
           localStorage.setItem(CALL_ALERT_EVENT_KEY, alertValue);
-          window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key: CALL_ALERT_EVENT_KEY, newValue: alertValue } }));
+          // Do not dispatch CustomEvent here so the caller doesn't see the notification
           if (m.email?.trim()) {
             fetch(`${getApiBase()}/api/invite`, {
               method: "POST",
@@ -375,6 +375,7 @@ export default function HomeContent() {
               }),
             }).catch(() => {});
           }
+          router.push(`/call/?room=${encodeURIComponent(roomId)}`);
         }}
       />
       <div className="sticky top-0 z-30 border-b border-black/5 bg-[#fbfaf8]/80 backdrop-blur">
