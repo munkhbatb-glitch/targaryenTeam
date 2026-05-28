@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiBase, getWebSocketUrl } from "@/lib/backend";
 
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+const CALL_ALERT_CLEAR_EVENT_KEY = "incomingCallClearEvent";
 
 export type ChatMessage = {
   id: string;
@@ -38,6 +39,7 @@ export function useVideoCall({
   const [roomJoined, setRoomJoined] = useState(false);
   const [waiting, setWaiting] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const clearSignalSentRef = useRef(false);
 
   useEffect(() => {
     localStreamRef.current = localStream;
@@ -80,6 +82,13 @@ export function useVideoCall({
     setWaiting(true);
   }, []);
 
+  const broadcastClearIncomingCallAlert = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const clearValue = JSON.stringify({ roomId, at: Date.now() });
+    localStorage.setItem(CALL_ALERT_CLEAR_EVENT_KEY, clearValue);
+    window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key: CALL_ALERT_CLEAR_EVENT_KEY, newValue: clearValue } }));
+  }, [roomId]);
+
   const cleanupAll = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "leave" }));
@@ -110,6 +119,10 @@ export function useVideoCall({
       }
       setWaiting(false);
       setConnected(true);
+      if (!clearSignalSentRef.current) {
+        clearSignalSentRef.current = true;
+        broadcastClearIncomingCallAlert();
+      }
     };
 
     pc.onicecandidate = (event) => {
@@ -187,6 +200,7 @@ export function useVideoCall({
     });
     hasPeerRef.current = false;
     offerSentRef.current = false;
+    clearSignalSentRef.current = false;
 
     const ws = new WebSocket(getWebSocketUrl());
     wsRef.current = ws;
@@ -223,6 +237,7 @@ export function useVideoCall({
           }
           break;
         case "peer-left":
+          broadcastClearIncomingCallAlert();
           cleanupPeer();
           break;
         case "chat":
@@ -262,6 +277,7 @@ export function useVideoCall({
     };
 
     return () => {
+      broadcastClearIncomingCallAlert();
       cleanupAll();
     };
   }, [
@@ -269,6 +285,7 @@ export function useVideoCall({
     cleanupAll,
     cleanupPeer,
     createOffer,
+    broadcastClearIncomingCallAlert,
     handleOffer,
     roomId,
     tryStartVideo,

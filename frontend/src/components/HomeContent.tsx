@@ -25,7 +25,7 @@ import {
   YoutubeOutlined,
 } from "@ant-design/icons";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Avatar, Button } from "antd";
@@ -33,14 +33,27 @@ import MentorBookingModal, {
   type MentorForBooking,
 } from "@/components/MentorBookingModal";
 import { getApiBase } from "@/lib/backend";
+import Lottie from "lottie-react";
+import callAnimation from "../../animation.json";
 
 const CALL_MENTOR_KEY = "activeCallMentor";
+const ROOM_KEY = "activeCallRoom";
+const CALL_ALERT_EVENT_KEY = "incomingCallEvent";
+const CALL_ALERT_CLEAR_EVENT_KEY = "incomingCallClearEvent";
+
+type IncomingCallAlert = {
+  roomId: string;
+  hostName: string;
+  hostAvatar?: string;
+  createdAt: number;
+};
 
 export default function HomeContent() {
   const router = useRouter();
   const [bookingMentor, setBookingMentor] = useState<MentorForBooking | null>(
     null,
   );
+  const [incomingCall, setIncomingCall] = useState<IncomingCallAlert | null>(null);
   const stats = [
     { label: "Онлайн уулзалт", value: "50K+" },
     { label: "Бодит сэтгэгдэл", value: "50K+" },
@@ -207,8 +220,133 @@ export default function HomeContent() {
     },
   ];
 
+  useEffect(() => {
+    function parseIncomingCall(raw: string | null): IncomingCallAlert | null {
+      if (!raw) return null;
+      try {
+        const data = JSON.parse(raw) as IncomingCallAlert;
+        if (!data.roomId || !data.createdAt) return null;
+        return data;
+      } catch {
+        return null;
+      }
+    }
+
+    const checkFreshIncomingCall = (event: IncomingCallAlert | null) => {
+      if (!event) return;
+      // Ignore stale events older than 2 minutes.
+      if (Date.now() - event.createdAt > 120_000) {
+        setIncomingCall(null);
+        return;
+      }
+      
+      const rawClear = localStorage.getItem(CALL_ALERT_CLEAR_EVENT_KEY);
+      if (rawClear) {
+        try {
+          const clearData = JSON.parse(rawClear);
+          if (clearData.roomId === event.roomId && clearData.at >= event.createdAt) {
+            setIncomingCall(null);
+            return;
+          }
+        } catch {}
+      }
+      
+      setIncomingCall(event);
+    };
+
+    checkFreshIncomingCall(
+      parseIncomingCall(localStorage.getItem(CALL_ALERT_EVENT_KEY)),
+    );
+
+    const onStorage = (ev: StorageEvent) => {
+      if (ev.key === CALL_ALERT_EVENT_KEY) {
+        checkFreshIncomingCall(parseIncomingCall(ev.newValue));
+      }
+      if (ev.key === CALL_ALERT_CLEAR_EVENT_KEY) {
+        setIncomingCall(null);
+      }
+    };
+
+    const onCustomStorage = (ev: CustomEvent) => {
+      if (ev.detail.key === CALL_ALERT_EVENT_KEY) {
+        checkFreshIncomingCall(parseIncomingCall(ev.detail.newValue));
+      }
+      if (ev.detail.key === CALL_ALERT_CLEAR_EVENT_KEY) {
+        setIncomingCall(null);
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("local-storage-sync", onCustomStorage as EventListener);
+    
+    // Fallback polling for same-browser situations where storage events might be missed
+    const pollInterval = setInterval(() => {
+      checkFreshIncomingCall(parseIncomingCall(localStorage.getItem(CALL_ALERT_EVENT_KEY)));
+    }, 2000);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("local-storage-sync", onCustomStorage as EventListener);
+      clearInterval(pollInterval);
+    };
+  }, []);
+
+  function joinIncomingCall() {
+    if (!incomingCall) return;
+    const clearValue = JSON.stringify({ roomId: incomingCall.roomId, at: Date.now() });
+    localStorage.setItem(CALL_ALERT_CLEAR_EVENT_KEY, clearValue);
+    window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key: CALL_ALERT_CLEAR_EVENT_KEY, newValue: clearValue } }));
+    
+    sessionStorage.setItem(ROOM_KEY, incomingCall.roomId);
+    router.push(`/call/?room=${encodeURIComponent(incomingCall.roomId)}`);
+    setIncomingCall(null);
+  }
+
   return (
     <div className="min-h-screen bg-[#fbfaf8] text-slate-900">
+      {incomingCall && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-[480px] rounded-3xl bg-white p-10 text-center shadow-2xl">
+            <div className="relative mx-auto mb-6 flex w-fit justify-center">
+              <div className="relative z-10 size-[140px] rounded-full">
+                <Lottie animationData={callAnimation} loop={true} className="size-full" />
+              </div>
+              <div className="absolute -right-4 top-2 z-20 flex flex-col items-center gap-1">
+                <span className="text-3xl">👋</span>
+                <Avatar
+                  src="/Picture.png"
+                  size={56}
+                  className="rounded-2xl border-4 border-white shadow-lg"
+                />
+              </div>
+            </div>
+            
+            <h3 className="mb-8 text-xl font-medium text-slate-900">
+              Таны уулзалтын цаг болсон байна
+            </h3>
+            
+            <button
+              type="button"
+              onClick={joinIncomingCall}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#CC553B] py-4 text-base font-semibold text-white transition hover:bg-[#B64A33]"
+            >
+              Уулзалтанд оролцох <ArrowRightOutlined />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const clearValue = JSON.stringify({ roomId: incomingCall.roomId, at: Date.now() });
+                localStorage.setItem(CALL_ALERT_CLEAR_EVENT_KEY, clearValue);
+                window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key: CALL_ALERT_CLEAR_EVENT_KEY, newValue: clearValue } }));
+                setIncomingCall(null);
+              }}
+              className="mt-3 w-full rounded-2xl py-3 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+            >
+              Хаах
+            </button>
+          </div>
+        </div>
+      )}
       <MentorBookingModal
         mentor={bookingMentor}
         open={bookingMentor !== null}
@@ -216,7 +354,16 @@ export default function HomeContent() {
         onBookingComplete={(m) => {
           const roomId = `call-${Date.now()}`;
           sessionStorage.setItem(CALL_MENTOR_KEY, JSON.stringify(m));
-          sessionStorage.setItem("activeCallRoom", roomId);
+          sessionStorage.setItem(ROOM_KEY, roomId);
+          const alertValue = JSON.stringify({
+              roomId,
+              hostName: m.name || "Хэрэглэгч",
+              hostAvatar: m.avatarUrl || undefined,
+              createdAt: Date.now(),
+            } satisfies IncomingCallAlert);
+            
+          localStorage.setItem(CALL_ALERT_EVENT_KEY, alertValue);
+          window.dispatchEvent(new CustomEvent("local-storage-sync", { detail: { key: CALL_ALERT_EVENT_KEY, newValue: alertValue } }));
           if (m.email?.trim()) {
             fetch(`${getApiBase()}/api/invite`, {
               method: "POST",
@@ -228,7 +375,6 @@ export default function HomeContent() {
               }),
             }).catch(() => {});
           }
-          router.push(`/call/?room=${encodeURIComponent(roomId)}`);
         }}
       />
       <div className="sticky top-0 z-30 border-b border-black/5 bg-[#fbfaf8]/80 backdrop-blur">
