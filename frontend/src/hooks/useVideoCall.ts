@@ -277,7 +277,6 @@ export function useVideoCall({
     };
 
     return () => {
-      broadcastClearIncomingCallAlert();
       cleanupAll();
     };
   }, [
