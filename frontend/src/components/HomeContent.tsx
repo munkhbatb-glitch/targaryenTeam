@@ -362,6 +362,8 @@ export default function HomeContent() {
               createdAt: Date.now(),
             } satisfies IncomingCallAlert);
             
+          // Remove any stale clear-event so it doesn't suppress this new notification
+          localStorage.removeItem("incomingCallClearEvent");
           localStorage.setItem(CALL_ALERT_EVENT_KEY, alertValue);
           // Do not dispatch CustomEvent here so the caller doesn't see the notification
           if (m.email?.trim()) {
