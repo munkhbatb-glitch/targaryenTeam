@@ -24,6 +24,26 @@ export class EmailService {
     return Boolean(this.config.get<string>('RESEND_API_KEY'));
   }
 
+  getStatus() {
+    const emailFrom = this.config.get<string>('EMAIL_FROM');
+    const provider = this.config.get<string>('EMAIL_PROVIDER', 'auto');
+    const brevo = this.hasBrevoConfig();
+    const resend = this.hasResendConfig();
+
+    return {
+      configured: Boolean(emailFrom && (brevo || resend)),
+      emailProvider: provider,
+      hasBrevoApiKey: Boolean(this.config.get<string>('BREVO_API_KEY')),
+      hasBrevoSmtp: Boolean(
+        this.config.get<string>('BREVO_SMTP_USER') &&
+          this.config.get<string>('BREVO_SMTP_KEY'),
+      ),
+      hasResendApiKey: resend,
+      hasEmailFrom: Boolean(emailFrom),
+      emailFrom: emailFrom?.includes('yourdomain.com') ? null : emailFrom,
+    };
+  }
+
   getProvider(): EmailProvider {
     const configured = this.config.get<string>('EMAIL_PROVIDER', 'auto').toLowerCase();
 

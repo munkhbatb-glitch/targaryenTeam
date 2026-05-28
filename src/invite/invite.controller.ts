@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Headers,
   Post,
   Req,
@@ -8,10 +9,19 @@ import {
 import { Request } from 'express';
 import { SendInviteDto } from './dto/send-invite.dto';
 import { InviteService } from './invite.service';
+import { EmailService } from './email/email.service';
 
 @Controller('api/invite')
 export class InviteController {
-  constructor(private readonly inviteService: InviteService) {}
+  constructor(
+    private readonly inviteService: InviteService,
+    private readonly emailService: EmailService,
+  ) {}
+
+  @Get('status')
+  getStatus() {
+    return this.emailService.getStatus();
+  }
 
   @Post()
   async sendInvite(

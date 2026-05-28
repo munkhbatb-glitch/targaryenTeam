@@ -23,6 +23,7 @@ import type { MentorForBooking } from "@/components/MentorBookingModal";
 import { useLocalMedia } from "@/hooks/useLocalMedia";
 import { useVideoCall } from "@/hooks/useVideoCall";
 import { getMentorDisplayName } from "@/lib/mentor-display";
+import { getApiBase, getInviteUrl } from "@/lib/backend";
 
 type Props = {
   mentor: MentorForBooking;
@@ -38,6 +39,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
   const [draft, setDraft] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteStatus, setInviteStatus] = useState("");
+  const [emailConfigured, setEmailConfigured] = useState<boolean | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -96,6 +98,13 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    fetch(`${getApiBase()}/api/invite/status`)
+      .then((r) => r.json())
+      .then((data: { configured?: boolean }) => setEmailConfigured(Boolean(data.configured)))
+      .catch(() => setEmailConfigured(false));
+  }, []);
 
   function sendMessage() {
     const text = draft.trim();
@@ -262,17 +271,33 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
                   }}
                   placeholder="И-мэйлээр урих"
                   type="email"
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                  disabled={emailConfigured === false}
+                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => void handleInvite()}
-                  disabled={!inviteEmail.trim()}
+                  disabled={!inviteEmail.trim() || emailConfigured === false}
                   className="shrink-0 rounded-lg bg-[#ff4d2d] px-2.5 py-1 text-xs font-medium text-white disabled:opacity-40"
                 >
                   Урих
                 </button>
               </div>
+              {emailConfigured === false && (
+                <p className="px-1 text-xs text-amber-700">
+                  И-мэйл идэвхгүй. Room link хуваалц:{" "}
+                  <button
+                    type="button"
+                    className="underline"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(getInviteUrl(roomId));
+                      setInviteStatus("Link хуулагдлаа");
+                    }}
+                  >
+                    link хуулах
+                  </button>
+                </p>
+              )}
               {inviteStatus && (
                 <p className="px-1 text-xs text-slate-500">{inviteStatus}</p>
               )}
