@@ -314,7 +314,7 @@ export default function HomeContent() {
               <div className="absolute -right-4 top-2 z-20 flex flex-col items-center gap-1">
                 <span className="text-3xl">👋</span>
                 <Avatar
-                  src="/Picture.png"
+                  src="/boldko.png"
                   size={56}
                   className="rounded-2xl border-4 border-white shadow-lg"
                 />
