@@ -4,13 +4,14 @@
   "description": "WebRTC video call with NestJS + Next.js frontend",
   "scripts": {
     "build:frontend": "npm --prefix frontend install && npm --prefix frontend run build",
-    "build": "npm run build:frontend && nest build",
+    "build:backend": "tsc -p tsconfig.json",
+    "build": "npm run build:frontend && npm run build:backend",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.12",

@@ -3,12 +3,12 @@ services:
     name: video-call-demo
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm run start:prod
     healthCheckPath: /
     envVars:
-      - key: NODE_ENV
-        value: production
+      - key: NODE_VERSION
+        value: "22"
       - key: APP_URL
         sync: false
       - key: EMAIL_PROVIDER
