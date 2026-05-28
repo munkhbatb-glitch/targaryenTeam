@@ -10,12 +10,12 @@ services:
       - key: NODE_VERSION
         value: "22"
       - key: APP_URL
-        sync: false
+        value: https://targaryenteam.onrender.com
       - key: EMAIL_PROVIDER
         value: brevo
       - key: BREVO_API_KEY
         sync: false
       - key: EMAIL_FROM
-        sync: false
+        value: munkhbat.b@blueprint.mn
       - key: EMAIL_FROM_NAME
         value: Video Call Demo
