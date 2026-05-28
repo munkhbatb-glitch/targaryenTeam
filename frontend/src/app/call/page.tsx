@@ -30,6 +30,8 @@ function CallPageContent() {
 
   useEffect(() => {
     const roomFromUrl = searchParams.get("room")?.trim() || "";
+    let nextMentor: MentorForBooking | null = null;
+    let nextRoomId = "";
 
     if (roomFromUrl) {
       sessionStorage.setItem(STORAGE_ROOM, roomFromUrl);
@@ -38,17 +40,22 @@ function CallPageContent() {
     try {
       const rawMentor = sessionStorage.getItem(STORAGE_MENTOR);
       if (rawMentor) {
-        setMentor(JSON.parse(rawMentor) as MentorForBooking);
+        nextMentor = JSON.parse(rawMentor) as MentorForBooking;
       } else if (roomFromUrl) {
-        setMentor(FALLBACK_MENTOR);
+        nextMentor = FALLBACK_MENTOR;
       }
     } catch {
-      setMentor(roomFromUrl ? FALLBACK_MENTOR : null);
+      nextMentor = roomFromUrl ? FALLBACK_MENTOR : null;
     }
 
     const roomFromStorage = sessionStorage.getItem(STORAGE_ROOM) || "";
-    setRoomId(roomFromUrl || roomFromStorage);
-    setLoaded(true);
+    nextRoomId = roomFromUrl || roomFromStorage;
+
+    queueMicrotask(() => {
+      setMentor(nextMentor);
+      setRoomId(nextRoomId);
+      setLoaded(true);
+    });
   }, [searchParams]);
 
   useEffect(() => {

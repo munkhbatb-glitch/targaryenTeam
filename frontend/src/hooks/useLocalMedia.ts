@@ -59,7 +59,9 @@ export function useLocalMedia({ autoStart = true }: UseLocalMediaOptions = {}) {
 
   useEffect(() => {
     if (!autoStart) return;
-    void startCamera();
+    queueMicrotask(() => {
+      void startCamera();
+    });
     return () => stopStream();
   }, [autoStart, startCamera, stopStream]);
 

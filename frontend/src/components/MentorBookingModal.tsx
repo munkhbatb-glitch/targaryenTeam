@@ -393,9 +393,11 @@ export default function MentorBookingModal({
 
   useEffect(() => {
     if (!open) {
-      setStep("booking");
-      setPaymentPhase("qr");
-      setIsClosing(false);
+      queueMicrotask(() => {
+        setStep("booking");
+        setPaymentPhase("qr");
+        setIsClosing(false);
+      });
       completedRef.current = false;
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
     }
@@ -488,12 +490,22 @@ export default function MentorBookingModal({
         {/* Left: mentor + calendar + times */}
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-black/5 p-5 md:border-r md:p-6">
           <div className="flex items-start gap-3">
-            <div
-              className="grid size-14 shrink-0 place-items-center rounded-full text-lg font-semibold text-[#CC553B]"
-              style={{ backgroundColor: "#fff1f0" }}
-            >
-              {mentor.name.slice(0, 1)}
-            </div>
+            {mentor.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={mentor.avatarUrl}
+                alt={`${mentor.name} avatar`}
+                className="size-14 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <div
+                className="grid size-14 shrink-0 place-items-center rounded-full text-lg font-semibold text-[#CC553B]"
+                style={{ backgroundColor: "#fff1f0" }}
+                aria-hidden="true"
+              >
+                {mentor.name.slice(0, 1)}
+              </div>
+            )}
             <div className="min-w-0">
               <div className="text-base font-semibold text-slate-900">{mentor.name}</div>
               <div className="text-sm text-slate-500">{mentor.title}</div>

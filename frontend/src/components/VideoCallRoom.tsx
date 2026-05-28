@@ -39,6 +39,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
   const [inviteStatus, setInviteStatus] = useState("");
   const [emailConfigured, setEmailConfigured] = useState<boolean | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
 
   const {
     micOn,
@@ -55,7 +56,11 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
     startCamera,
   } = useLocalMedia();
 
-  const localStream = ready ? streamRef.current : null;
+  useEffect(() => {
+    queueMicrotask(() => {
+      setLocalStream(ready ? streamRef.current : null);
+    });
+  }, [ready, streamRef]);
 
   const {
     messages,
@@ -159,25 +164,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
             />
           ) : (
             <>
-              <Image
-                src="/images/hero/expert.png"
-                alt=""
-                fill
-                className="object-cover opacity-90 blur-2xl scale-110"
-                priority
-              />
               <div className="absolute inset-0 bg-[#f0a8c8]/25" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative size-28 overflow-hidden rounded-full ring-4 ring-white/50 shadow-xl sm:size-36">
-                  <Image
-                    src="/images/hero/expert.png"
-                    alt={displayName}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
-              </div>
               {waiting && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/35 text-sm font-medium text-white">
                   Холбогдохыг хүлээж байна...

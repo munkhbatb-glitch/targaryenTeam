@@ -39,8 +39,10 @@ export function useVideoCall({
   const [waiting, setWaiting] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  localStreamRef.current = localStream;
-  displayNameRef.current = displayName;
+  useEffect(() => {
+    localStreamRef.current = localStream;
+    displayNameRef.current = displayName;
+  }, [localStream, displayName]);
 
   const appendMessage = useCallback((message: Omit<ChatMessage, "id">) => {
     setMessages((prev) => [
@@ -136,8 +138,7 @@ export function useVideoCall({
     return pc;
   }, [cleanupPeer]);
 
-  const createOfferRef = useRef<() => Promise<void>>(async () => {});
-  createOfferRef.current = async () => {
+  const createOffer = useCallback(async () => {
     if (offerSentRef.current || !localStreamRef.current) return;
 
     const pc = createPeerConnection();
@@ -147,42 +148,43 @@ export function useVideoCall({
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     wsRef.current.send(JSON.stringify({ type: "offer", offer }));
-  };
+  }, [createPeerConnection]);
 
-  const handleOfferRef = useRef<
-    (offer: RTCSessionDescriptionInit) => Promise<void>
-  >(async () => {});
-  handleOfferRef.current = async (offer: RTCSessionDescriptionInit) => {
-    if (!localStreamRef.current) {
-      hasPeerRef.current = true;
-      return;
-    }
+  const handleOffer = useCallback(
+    async (offer: RTCSessionDescriptionInit) => {
+      if (!localStreamRef.current) {
+        hasPeerRef.current = true;
+        return;
+      }
 
-    const pc = createPeerConnection();
-    if (!pc || !wsRef.current) return;
+      const pc = createPeerConnection();
+      if (!pc || !wsRef.current) return;
 
-    await pc.setRemoteDescription(offer);
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    wsRef.current.send(JSON.stringify({ type: "answer", answer }));
-  };
+      await pc.setRemoteDescription(offer);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      wsRef.current.send(JSON.stringify({ type: "answer", answer }));
+    },
+    [createPeerConnection],
+  );
 
-  const tryStartVideoRef = useRef<() => Promise<void>>(async () => {});
-  tryStartVideoRef.current = async () => {
+  const tryStartVideo = useCallback(async () => {
     if (!wsReadyRef.current || !localStreamRef.current) return;
     if (hasPeerRef.current && !pcRef.current && !offerSentRef.current) {
-      await createOfferRef.current();
+      await createOffer();
     }
-  };
+  }, [createOffer]);
 
   useEffect(() => {
     if (!roomId) return;
 
-    setError(null);
-    setMessages([]);
-    setWaiting(true);
-    setConnected(false);
-    setRoomJoined(false);
+    queueMicrotask(() => {
+      setError(null);
+      setMessages([]);
+      setWaiting(true);
+      setConnected(false);
+      setRoomJoined(false);
+    });
     hasPeerRef.current = false;
     offerSentRef.current = false;
 
@@ -202,15 +204,15 @@ export function useVideoCall({
           setRoomJoined(true);
           if (data.peers >= 1) {
             hasPeerRef.current = true;
-            await tryStartVideoRef.current();
+            await tryStartVideo();
           }
           break;
         case "peer-joined":
           hasPeerRef.current = true;
-          await createOfferRef.current();
+          await createOffer();
           break;
         case "offer":
-          await handleOfferRef.current(data.offer);
+          await handleOffer(data.offer);
           break;
         case "answer":
           await pcRef.current?.setRemoteDescription(data.answer);
@@ -262,12 +264,20 @@ export function useVideoCall({
     return () => {
       cleanupAll();
     };
-  }, [appendMessage, cleanupAll, cleanupPeer, roomId]);
+  }, [
+    appendMessage,
+    cleanupAll,
+    cleanupPeer,
+    createOffer,
+    handleOffer,
+    roomId,
+    tryStartVideo,
+  ]);
 
   useEffect(() => {
     if (!localStream || !roomJoined) return;
-    void tryStartVideoRef.current();
-  }, [localStream, roomJoined]);
+    void tryStartVideo();
+  }, [localStream, roomJoined, tryStartVideo]);
 
   const sendChat = useCallback(
     (text: string) => {
