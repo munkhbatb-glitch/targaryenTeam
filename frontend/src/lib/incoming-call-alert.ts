@@ -1,5 +1,6 @@
 export const CALL_ALERT_EVENT_KEY = "incomingCallEvent";
 export const CALL_ALERT_CLEAR_EVENT_KEY = "incomingCallClearEvent";
+const CALL_INITIATED_ROOMS_KEY = "initiatedCallRooms";
 
 export type IncomingCallAlert = {
   roomId: string;
@@ -28,7 +29,10 @@ export function publishIncomingCallAlert(
   );
 }
 
-export function clearIncomingCallAlert(roomId: string) {
+export function clearIncomingCallAlert(
+  roomId: string,
+  options?: { broadcastToLobby?: boolean },
+) {
   if (typeof window === "undefined") return;
 
   const clearValue = JSON.stringify({ roomId, at: Date.now() });
@@ -38,6 +42,37 @@ export function clearIncomingCallAlert(roomId: string) {
       detail: { key: CALL_ALERT_CLEAR_EVENT_KEY, newValue: clearValue },
     }),
   );
+  if (options?.broadcastToLobby !== false) {
+    window.dispatchEvent(
+      new CustomEvent("call-clear-broadcast", { detail: { roomId } }),
+    );
+  }
+}
+
+/** Энэ таб дээр эхлүүлсэн дуудлагыг тэмдэглэнэ (эхлүүлэгчид мэдэгдэл харуулахгүй). */
+export function markCallInitiated(roomId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = sessionStorage.getItem(CALL_INITIATED_ROOMS_KEY);
+    const rooms: string[] = raw ? (JSON.parse(raw) as string[]) : [];
+    if (!rooms.includes(roomId)) {
+      rooms.push(roomId);
+      sessionStorage.setItem(CALL_INITIATED_ROOMS_KEY, JSON.stringify(rooms));
+    }
+  } catch {
+    sessionStorage.setItem(CALL_INITIATED_ROOMS_KEY, JSON.stringify([roomId]));
+  }
+}
+
+export function isCallInitiator(roomId: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = sessionStorage.getItem(CALL_INITIATED_ROOMS_KEY);
+    if (!raw) return false;
+    return (JSON.parse(raw) as string[]).includes(roomId);
+  } catch {
+    return false;
+  }
 }
 
 export function parseIncomingCallAlert(

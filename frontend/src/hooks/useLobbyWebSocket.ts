@@ -94,17 +94,38 @@ export function useLobbyWebSocket({
     hostName: string;
     hostAvatar?: string;
   }) {
+    const message = JSON.stringify({
+      type: "call-notify",
+      ...payload,
+      createdAt: Date.now(),
+    });
+
+    const trySend = () => {
+      const ws = wsRef.current;
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(message);
+        return true;
+      }
+      return false;
+    };
+
+    if (trySend()) return;
+
+    let attempts = 0;
+    const retry = setInterval(() => {
+      if (trySend() || ++attempts >= 15) {
+        clearInterval(retry);
+      }
+    }, 200);
+  }
+
+  function sendCallClear(roomId: string) {
+    const message = JSON.stringify({ type: "call-clear", roomId });
     const ws = wsRef.current;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(
-        JSON.stringify({
-          type: "call-notify",
-          ...payload,
-          createdAt: Date.now(),
-        }),
-      );
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(message);
     }
   }
 
-  return { sendCallNotify };
+  return { sendCallNotify, sendCallClear };
 }

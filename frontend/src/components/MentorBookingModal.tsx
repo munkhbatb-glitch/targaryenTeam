@@ -32,6 +32,8 @@ type Props = {
   mentor: MentorForBooking | null;
   open: boolean;
   onClose: () => void;
+  /** Дуудлага эхлэх үед (төлбөр амжилттай) шууд дуудагдана */
+  onCallInitiated?: (mentor: MentorForBooking, roomId: string) => void;
   onBookingComplete?: (mentor: MentorForBooking) => void;
 };
 
@@ -368,6 +370,7 @@ export default function MentorBookingModal({
   mentor,
   open,
   onClose,
+  onCallInitiated,
   onBookingComplete,
 }: Props) {
   const today = useMemo(() => new Date(), []);
@@ -384,6 +387,8 @@ export default function MentorBookingModal({
   const [isClosing, setIsClosing] = useState(false);
   const closeTimerRef = useRef<number | null>(null);
   const completedRef = useRef(false);
+  const callInitiatedRef = useRef(false);
+  const pendingRoomIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -399,9 +404,19 @@ export default function MentorBookingModal({
         setIsClosing(false);
       });
       completedRef.current = false;
+      callInitiatedRef.current = false;
+      pendingRoomIdRef.current = null;
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
     }
   }, [open]);
+
+  function initiateCallAlert() {
+    if (!mentor || callInitiatedRef.current) return;
+    callInitiatedRef.current = true;
+    const roomId = pendingRoomIdRef.current ?? `call-${Date.now()}`;
+    pendingRoomIdRef.current = roomId;
+    onCallInitiated?.(mentor, roomId);
+  }
 
   const calendarDays = useMemo(
     () => getCalendarDays(viewYear, viewMonth),
@@ -454,9 +469,11 @@ export default function MentorBookingModal({
 
   function handleCheckPayment() {
     if (paymentPhase !== "qr") return;
+    pendingRoomIdRef.current = `call-${Date.now()}`;
     setPaymentPhase("checking");
     window.setTimeout(() => {
       setPaymentPhase("success");
+      initiateCallAlert();
       closeTimerRef.current = window.setTimeout(() => {
         handleClose(true);
       }, 3200);
