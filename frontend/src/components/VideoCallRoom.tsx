@@ -40,15 +40,14 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
   const [inviteStatus, setInviteStatus] = useState("");
   const [emailConfigured, setEmailConfigured] = useState<boolean | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-
   const {
+    stream: localStream,
+    tracksRevision,
     micOn,
     cameraOn,
     screenSharing,
     ready,
     error,
-    streamRef,
     attachToVideo,
     stopStream,
     toggleMic,
@@ -57,15 +56,10 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
     startCamera,
   } = useLocalMedia();
 
-  useEffect(() => {
-    queueMicrotask(() => {
-      setLocalStream(ready ? streamRef.current : null);
-    });
-  }, [ready, streamRef]);
-
   const {
     messages,
     connected,
+    remoteVideoReady,
     waiting,
     roomJoined,
     error: callError,
@@ -76,6 +70,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
     roomId,
     displayName,
     localStream,
+    tracksRevision,
   });
 
   const bindLocalVideo = useCallback(
@@ -132,6 +127,7 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
     router.push("/");
   }
 
+  const showRemoteVideo = remoteVideoReady || connected;
   const statusError = error || callError;
   const renderMessageText = useCallback((text: string): ReactNode => {
     const urlRegex = /((?:https?:\/\/|www\.)[^\s<]+)/gi;
@@ -169,9 +165,9 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
             autoPlay
             playsInline
             muted={false}
-            className={`size-full object-cover ${connected ? "opacity-100" : "pointer-events-none absolute inset-0 opacity-0"}`}
+            className={`size-full object-cover ${showRemoteVideo ? "opacity-100" : "pointer-events-none absolute inset-0 opacity-0"}`}
           />
-          {!connected && ready && (cameraOn || screenSharing) && (
+          {!showRemoteVideo && ready && (cameraOn || screenSharing) && (
             <video
               ref={bindLocalVideoPreview}
               autoPlay
@@ -180,17 +176,17 @@ export default function VideoCallRoom({ mentor, roomId }: Props) {
               className="size-full object-cover"
             />
           )}
-          {!connected && !(cameraOn || screenSharing) && (
+          {!showRemoteVideo && !(cameraOn || screenSharing) && (
             <div className="absolute inset-0 bg-[#f0a8c8]/25" />
           )}
-          {!connected && waiting && (
+          {!showRemoteVideo && waiting && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/35 text-sm font-medium text-white">
               Холбогдохыг хүлээж байна...
             </div>
           )}
 
           <div className="absolute bottom-4 left-4 rounded-full bg-black/45 px-3.5 py-1.5 text-sm font-medium text-white backdrop-blur-sm">
-            {connected ? "Харилцагч" : displayName}
+            {showRemoteVideo ? "Харилцагч" : displayName}
           </div>
         </div>
 

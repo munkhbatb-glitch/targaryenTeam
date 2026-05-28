@@ -13,11 +13,17 @@ type UseLocalMediaOptions = {
 export function useLocalMedia({ autoStart = true }: UseLocalMediaOptions = {}) {
   const streamRef = useRef<MediaStream | null>(null);
   const cameraVideoTrackRef = useRef<MediaStreamTrack | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [tracksRevision, setTracksRevision] = useState(0);
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [screenSharing, setScreenSharing] = useState(false);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const bumpTracksRevision = useCallback(() => {
+    setTracksRevision((v) => v + 1);
+  }, []);
 
   const attachToVideo = useCallback((el: HTMLVideoElement | null) => {
     if (el && streamRef.current) {
@@ -30,6 +36,7 @@ export function useLocalMedia({ autoStart = true }: UseLocalMediaOptions = {}) {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     cameraVideoTrackRef.current = null;
+    setStream(null);
     setReady(false);
     setScreenSharing(false);
   }, []);
@@ -47,6 +54,7 @@ export function useLocalMedia({ autoStart = true }: UseLocalMediaOptions = {}) {
       });
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = stream;
+      setStream(stream);
       const videoTrack = stream.getVideoTracks()[0] ?? null;
       cameraVideoTrackRef.current = videoTrack;
       setMicOn(true);
@@ -91,6 +99,7 @@ export function useLocalMedia({ autoStart = true }: UseLocalMediaOptions = {}) {
       });
       cameraVideoTrackRef.current = null;
       setCameraOn(false);
+      bumpTracksRevision();
       return;
     }
 
@@ -104,10 +113,11 @@ export function useLocalMedia({ autoStart = true }: UseLocalMediaOptions = {}) {
       cameraVideoTrackRef.current = track;
       stream.addTrack(track);
       setCameraOn(true);
+      bumpTracksRevision();
     } catch {
       setError("Камер асаахад алдаа гарлаа.");
     }
-  }, [cameraOn, screenSharing]);
+  }, [bumpTracksRevision, cameraOn, screenSharing]);
 
   const toggleScreenShare = useCallback(async () => {
     const stream = streamRef.current;
@@ -135,6 +145,7 @@ export function useLocalMedia({ autoStart = true }: UseLocalMediaOptions = {}) {
         }
       }
       setScreenSharing(false);
+      bumpTracksRevision();
       return;
     }
 
@@ -176,12 +187,15 @@ export function useLocalMedia({ autoStart = true }: UseLocalMediaOptions = {}) {
       };
       setScreenSharing(true);
       setCameraOn(true);
+      bumpTracksRevision();
     } catch {
       /* user cancelled picker */
     }
-  }, [screenSharing]);
+  }, [bumpTracksRevision, screenSharing]);
 
   return {
+    stream,
+    tracksRevision,
     streamRef,
     micOn,
     cameraOn,

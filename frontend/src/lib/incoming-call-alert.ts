@@ -1,6 +1,7 @@
 export const CALL_ALERT_EVENT_KEY = "incomingCallEvent";
 export const CALL_ALERT_CLEAR_EVENT_KEY = "incomingCallClearEvent";
 const CALL_INITIATED_ROOMS_KEY = "initiatedCallRooms";
+const DISMISSED_CALL_ROOMS_KEY = "dismissedCallRooms";
 
 export type IncomingCallAlert = {
   roomId: string;
@@ -29,11 +30,38 @@ export function publishIncomingCallAlert(
   );
 }
 
+export function markCallDismissed(roomId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = sessionStorage.getItem(DISMISSED_CALL_ROOMS_KEY);
+    const rooms: string[] = raw ? (JSON.parse(raw) as string[]) : [];
+    if (!rooms.includes(roomId)) {
+      rooms.push(roomId);
+      sessionStorage.setItem(DISMISSED_CALL_ROOMS_KEY, JSON.stringify(rooms));
+    }
+  } catch {
+    sessionStorage.setItem(DISMISSED_CALL_ROOMS_KEY, JSON.stringify([roomId]));
+  }
+}
+
+export function isCallDismissed(roomId: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = sessionStorage.getItem(DISMISSED_CALL_ROOMS_KEY);
+    if (!raw) return false;
+    return (JSON.parse(raw) as string[]).includes(roomId);
+  } catch {
+    return false;
+  }
+}
+
 export function clearIncomingCallAlert(
   roomId: string,
   options?: { broadcastToLobby?: boolean },
 ) {
   if (typeof window === "undefined") return;
+
+  markCallDismissed(roomId);
 
   const rawEvent = localStorage.getItem(CALL_ALERT_EVENT_KEY);
   if (rawEvent) {

@@ -18,11 +18,16 @@ import {
   CALL_ALERT_CLEAR_EVENT_KEY,
   CALL_ALERT_EVENT_KEY,
   clearIncomingCallAlert,
+  isCallDismissed,
   isCallInitiator,
   parseIncomingCallAlert,
   publishIncomingCallAlert,
   type IncomingCallAlert,
 } from "@/lib/incoming-call-alert";
+import {
+  startIncomingCallRingtone,
+  stopIncomingCallRingtone,
+} from "@/lib/incoming-call-ringtone";
 
 const CALL_MENTOR_KEY = "activeCallMentor";
 const ROOM_KEY = "activeCallRoom";
@@ -77,7 +82,8 @@ export default function IncomingCallProvider({ children }: { children: ReactNode
     if (
       !isAlertFresh(event) ||
       isAlertSuppressed(event) ||
-      isCallInitiator(event.roomId)
+      isCallInitiator(event.roomId) ||
+      isCallDismissed(event.roomId)
     ) {
       setIncomingCall(null);
       return;
@@ -87,7 +93,9 @@ export default function IncomingCallProvider({ children }: { children: ReactNode
 
   const { sendCallNotify, sendCallClear } = useLobbyWebSocket({
     onIncomingCall: (payload) => {
-      if (isCallInitiator(payload.roomId)) return;
+      if (isCallInitiator(payload.roomId) || isCallDismissed(payload.roomId)) {
+        return;
+      }
       publishIncomingCallAlert(payload);
     },
     onCallClear: (roomId) => {
@@ -146,17 +154,10 @@ export default function IncomingCallProvider({ children }: { children: ReactNode
     window.addEventListener("storage", onStorage);
     window.addEventListener("local-storage-sync", onCustomStorage);
 
-    const pollInterval = window.setInterval(() => {
-      applyIncomingCall(
-        parseIncomingCallAlert(localStorage.getItem(CALL_ALERT_EVENT_KEY)),
-      );
-    }, 1000);
-
     return () => {
       window.removeEventListener("call-clear-broadcast", onClearBroadcast);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("local-storage-sync", onCustomStorage);
-      window.clearInterval(pollInterval);
     };
   }, [applyIncomingCall, sendCallClear]);
 
@@ -171,10 +172,25 @@ export default function IncomingCallProvider({ children }: { children: ReactNode
 
   const dismissIncomingCall = useCallback(() => {
     if (!incomingCall) return;
+    stopIncomingCallRingtone();
     clearIncomingCallAlert(incomingCall.roomId, { broadcastToLobby: false });
     sendCallClear(incomingCall.roomId);
     setIncomingCall(null);
   }, [incomingCall, sendCallClear]);
+
+  useEffect(() => {
+    if (!incomingCall) {
+      stopIncomingCallRingtone();
+      return;
+    }
+    void startIncomingCallRingtone();
+    return () => stopIncomingCallRingtone();
+  }, [incomingCall]);
+
+  const joinIncomingCallWithSound = useCallback(() => {
+    stopIncomingCallRingtone();
+    joinIncomingCall();
+  }, [joinIncomingCall]);
 
   return (
     <IncomingCallContext.Provider
@@ -207,7 +223,7 @@ export default function IncomingCallProvider({ children }: { children: ReactNode
 
             <button
               type="button"
-              onClick={joinIncomingCall}
+              onClick={joinIncomingCallWithSound}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#CC553B] py-4 text-base font-semibold text-white transition hover:bg-[#B64A33]"
             >
               Уулзалтанд оролцох <ArrowRightOutlined />

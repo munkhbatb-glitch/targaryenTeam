@@ -18,12 +18,15 @@ type UseVideoCallOptions = {
   roomId: string;
   displayName: string;
   localStream: MediaStream | null;
+  /** Increments when local audio/video tracks are added or removed */
+  tracksRevision?: number;
 };
 
 export function useVideoCall({
   roomId,
   displayName,
   localStream,
+  tracksRevision = 0,
 }: UseVideoCallOptions) {
   const wsRef = useRef<WebSocket | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -40,6 +43,7 @@ export function useVideoCall({
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connected, setConnected] = useState(false);
+  const [remoteVideoReady, setRemoteVideoReady] = useState(false);
   const [roomJoined, setRoomJoined] = useState(false);
   const [waiting, setWaiting] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,13 +70,29 @@ export function useVideoCall({
     }
   }, []);
 
+  const refreshRemoteMediaState = useCallback(() => {
+    const stream = remoteStreamRef.current;
+    const hasVideo = Boolean(
+      stream
+        ?.getVideoTracks()
+        .some((t) => t.readyState === "live" && t.enabled),
+    );
+    const hasMedia = Boolean(
+      stream?.getTracks().some((t) => t.readyState === "live"),
+    );
+    setRemoteVideoReady(hasVideo);
+    setConnected(hasMedia);
+    setWaiting(!hasMedia);
+  }, []);
+
   const bindRemoteStream = useCallback(() => {
     const el = remoteVideoRef.current;
     if (!el || !remoteStreamRef.current) return;
     el.srcObject = remoteStreamRef.current;
     el.muted = false;
     void el.play().catch(() => {});
-  }, []);
+    refreshRemoteMediaState();
+  }, [refreshRemoteMediaState]);
 
   const addRemoteTrack = useCallback(
     (track: MediaStreamTrack) => {
@@ -85,11 +105,14 @@ export function useVideoCall({
       if (!exists) {
         remoteStreamRef.current.addTrack(track);
       }
-      setWaiting(false);
-      setConnected(true);
+      track.onunmute = () => {
+        refreshRemoteMediaState();
+        bindRemoteStream();
+      };
+      refreshRemoteMediaState();
       bindRemoteStream();
     },
-    [bindRemoteStream],
+    [bindRemoteStream, refreshRemoteMediaState],
   );
 
   const flushPendingCandidates = useCallback(async (pc: RTCPeerConnection) => {
@@ -116,6 +139,7 @@ export function useVideoCall({
       remoteVideoRef.current.srcObject = null;
     }
     setConnected(false);
+    setRemoteVideoReady(false);
     setWaiting(true);
   }, []);
 
@@ -149,8 +173,7 @@ export function useVideoCall({
       const [remoteStream] = event.streams;
       if (remoteStream) {
         remoteStreamRef.current = remoteStream;
-        setWaiting(false);
-        setConnected(true);
+        remoteStream.onaddtrack = () => bindRemoteStream();
         bindRemoteStream();
       } else {
         const track = event.track;
@@ -222,18 +245,6 @@ export function useVideoCall({
     [createPeerConnection, flushPendingCandidates],
   );
 
-  const tryStartVideo = useCallback(async () => {
-    if (!wsReadyRef.current || !localStreamRef.current) return;
-    if (
-      shouldOfferRef.current &&
-      hasPeerRef.current &&
-      !pcRef.current &&
-      !offerSentRef.current
-    ) {
-      await createOffer();
-    }
-  }, [createOffer]);
-
   useEffect(() => {
     if (!roomId) return;
 
@@ -271,7 +282,9 @@ export function useVideoCall({
         case "peer-joined":
           hasPeerRef.current = true;
           shouldOfferRef.current = true;
-          await createOffer();
+          if (localStreamRef.current) {
+            await createOffer();
+          }
           break;
         case "offer":
           await handleOffer(data.offer);
@@ -348,7 +361,6 @@ export function useVideoCall({
     flushPendingCandidates,
     handleOffer,
     roomId,
-    tryStartVideo,
   ]);
 
   useEffect(() => {
@@ -361,32 +373,47 @@ export function useVideoCall({
         await handleOffer(offer);
         return;
       }
-      await tryStartVideo();
+
+      if (
+        shouldOfferRef.current &&
+        hasPeerRef.current &&
+        !offerSentRef.current &&
+        localStreamRef.current
+      ) {
+        await createOffer();
+        return;
+      }
+
+      const pc = pcRef.current;
+      const stream = localStreamRef.current;
+      if (!pc || !stream || !wsRef.current) return;
+
+      let needsRenegotiate = false;
+      for (const track of stream.getTracks()) {
+        const sender = pc
+          .getSenders()
+          .find((s) => s.track?.kind === track.kind);
+        if (sender) {
+          if (sender.track?.id !== track.id) {
+            await sender.replaceTrack(track);
+          }
+        } else if (track.readyState === "live") {
+          pc.addTrack(track, stream);
+          needsRenegotiate = true;
+        }
+      }
+
+      if (
+        needsRenegotiate &&
+        offerSentRef.current &&
+        wsRef.current.readyState === WebSocket.OPEN
+      ) {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        wsRef.current.send(JSON.stringify({ type: "offer", offer }));
+      }
     })();
-  }, [localStream, roomJoined, tryStartVideo, handleOffer]);
-
-  useEffect(() => {
-    const stream = localStream;
-    const pc = pcRef.current;
-    if (!stream || !pc) return;
-
-    for (const sender of pc.getSenders()) {
-      if (sender.track?.kind === "audio") {
-        const audioTrack = stream.getAudioTracks()[0];
-        if (audioTrack && sender.track?.id !== audioTrack.id) {
-          void sender.replaceTrack(audioTrack);
-        }
-      }
-      if (sender.track?.kind === "video") {
-        const videoTrack = stream.getVideoTracks()[0];
-        if (videoTrack && sender.track?.id !== videoTrack.id) {
-          void sender.replaceTrack(videoTrack);
-        } else if (!videoTrack && sender.track) {
-          void sender.replaceTrack(null);
-        }
-      }
-    }
-  }, [localStream]);
+  }, [localStream, tracksRevision, roomJoined, createOffer, handleOffer]);
 
   const sendChat = useCallback(
     (text: string) => {
@@ -445,6 +472,7 @@ export function useVideoCall({
   return {
     messages,
     connected,
+    remoteVideoReady,
     roomJoined,
     waiting,
     error,
