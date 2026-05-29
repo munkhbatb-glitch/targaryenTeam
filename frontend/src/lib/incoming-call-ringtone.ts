@@ -13,7 +13,7 @@ const CHIME_NOTES_HZ = [880, 1108.73, 1318.51, 1760];
 let active = false;
 let mp3Audio: HTMLAudioElement | null = null;
 let audioContext: AudioContext | null = null;
-let phraseTimer: ReturnType<typeof setInterval> | null = null;
+let phraseTimer: number | null = null;
 
 function clearPhraseTimer() {
   if (phraseTimer !== null) {
