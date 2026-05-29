@@ -11,6 +11,8 @@ services:
         value: "22"
       - key: APP_URL
         value: https://targaryenteam.onrender.com
+      - key: CORS_ORIGIN
+        value: https://targaryenteam.onrender.com
       - key: EMAIL_PROVIDER
         value: brevo
       - key: BREVO_API_KEY
